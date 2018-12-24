@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
+	"os/user"
 	"github.com/skratchdot/open-golang/open"
 )
 
@@ -442,6 +442,56 @@ func (a *App) NewWebApp(c *CommandImpl) {
 	}
 }
 
+func (a *App) Open(c *CommandImpl) {
+	if err := a.LoadPending(); err != nil {
+		os.Exit(1)
+	} else {
+		todos := NewToDoFilter(a.TodoList.Data).Filter(c.Filters)
+		if len(todos) == 0 {
+			fmt.Println("No todos matching filter criteria.")
+			return
+		}
+		var notes []string
+		for _, todo := range todos {
+			notes = todo.Notes
+			for _, note := range notes {
+				note = strings.ToLower(note)
+				if strings.TrimSpace(note) == "notes" {
+					a.openNotes(todo.Uuid)
+				} else if len(c.Args) > 0 {
+					a.openUri(c.Args[0])
+				}
+			}
+		}
+	}
+}
+
+func (a *App) openUri(uri string) {
+	open.Start(uri)
+}
+
+func (a *App) openNotes(uuid string) {
+	usr, _ := user.Current()
+	notesDir := fmt.Sprintf("%s/.todo_notes", usr.HomeDir)
+	notes := fmt.Sprintf("%s/%s_notes.txt", notesDir, uuid)
+	if _, err := os.Stat(notesDir); os.IsNotExist(err) {
+		fmt.Println("Notes directory does not exist. Creating.")
+		err2 := os.MkdirAll(notesDir, 0755)
+		if err2 != nil {
+			fmt.Println("Error creating notes directory: ", err2.Error())
+		}
+	}
+	if _, err := os.Stat(notes); os.IsNotExist(err) {
+		fmt.Println("File does not exist. Creating.")
+		fd, err2 := os.OpenFile(notes, os.O_CREATE, 0644)
+		if err2 != nil {
+			fmt.Println("Error creating notes file: ", err2.Error())
+		}
+		fd.Close()
+	} 
+	a.openUri(notes)
+}
+
 func (a *App) PrintHelp(c *CommandImpl) {
 	p := NewScreenPrinter()
 	if len(c.Args) == 0 {
@@ -788,4 +838,7 @@ func (a *App) mapCommands() {
 
 	printHelpCmd := NewCommand("help", false, true, a.PrintHelp)
 	a.CommandMap["help"] = printHelpCmd
+
+	openCmd := NewCommand("help", false, true, a.Open)
+	a.CommandMap["open"] = openCmd
 }

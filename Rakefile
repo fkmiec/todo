@@ -1,4 +1,4 @@
-desc "Builds todolist for release"
+desc "Builds todo for release"
 
 Envs = [
   {goos: "darwin", arch: "386"},
@@ -10,7 +10,7 @@ Envs = [
   {goos: "windows", arch: "amd64"}
 ]
 
-Version = "0.8"
+Version = "1.0"
 
 task :build do
   `rm -rf dist/#{Version}`
