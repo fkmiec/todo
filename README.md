@@ -7,10 +7,14 @@ Todolist is a simple and very fast task manager for the command line.
 ## Feature highlights:  
 1) Manual ordering. For when sorting by due date or priority isn't enough.  
 2) Todo open. Inspired by TaskOpen. Opens a file or URI referenced in a todo note.  
-3) Synchronization. Backup or sync todos between PCs using a cloud drive. Performs a merge so that todos added, modified or removed on one PC are reflected in the other.  
+3) Synchronization. Backup or sync todos between PCs using a cloud drive. Performs a merge so that todos added, modified or removed on one PC are reflected in the other. Supports encryption of sync backlog.  
 4) Reports. Configure columns, sorting, grouping and filtering as desired.  
 5) Alias commands. Configure shorthand aliases for common commands.  
-6) Help. Just type 'todo help' or 'todo help <\command>' or 'todo help config'.  
+6) Configurable priority values.  
+7) Wait. Set a todo to hide until a future date.  
+8) Until. Set a todo to expire (auto archive) at a future date.  
+9) Date range filtering. Filter todos due before, after or between dates using specific dates or relative date values.  
+10) Help. Just type 'todo help' or 'todo help <\command>' or 'todo help config'.  
 
 ## Building
 Assumes golang is installed and GOPATH is set. Clone repository to somewhere on the GOPATH. Type go install github.com/fkmiec/todo. 
