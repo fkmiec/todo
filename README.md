@@ -18,8 +18,8 @@ Assumes golang is installed and GOPATH is set. Clone repository to somewhere on 
 ## Documentation
 ### Usage
 
-<img src="https://github.com/fkmiec/todolist/blob/master/markdown/images/overall_help_commands.png" width="100%"/> 
-<img src="https://github.com/fkmiec/todolist/blob/master/markdown/images/dates_filters_mods_args.png" width="100%" />  
+<img src="https://github.com/fkmiec/todo/blob/master/markdown/images/overall_help_commands.png" width="100%"/> 
+<img src="https://github.com/fkmiec/todo/blob/master/markdown/images/dates_filters_mods_args.png" width="100%" />  
 
 ### Basic Tutorial
 
@@ -58,42 +58,42 @@ $ td a My fifth todo +Project-1 @Home due:tom
 Todo 5 added.  
 
 ### List your todos
-![Example 1](https://github.com/fkmiec/todolist/blob/master/markdown/images/ex1.PNG "Example 1")
+![Example 1](https://github.com/fkmiec/todo/blob/master/markdown/images/ex1.PNG "Example 1")
 
 ### Filter your list to todos with the Home context
-![Example 2](https://github.com/fkmiec/todolist/blob/master/markdown/images/ex2.PNG "Example 2")
+![Example 2](https://github.com/fkmiec/todo/blob/master/markdown/images/ex2.PNG "Example 2")
 
 ### Filter your list to todos with project Project-1
-![Example 3](https://github.com/fkmiec/todolist/blob/master/markdown/images/ex3.PNG "Example 3")
+![Example 3](https://github.com/fkmiec/todo/blob/master/markdown/images/ex3.PNG "Example 3")
 
 ### Filter your todos to those with a due date
-![Example 4](https://github.com/fkmiec/todolist/blob/master/markdown/images/ex4.PNG "Example 4")
+![Example 4](https://github.com/fkmiec/todo/blob/master/markdown/images/ex4.PNG "Example 4")
 
 ### Filter to the top 2 items for each defined project (Note I created a sixth todo with a separate project for this example)
 #### You can also filter for the top N todos for a context (e.g. top:ctx:1)
-![Example 5](https://github.com/fkmiec/todolist/blob/master/markdown/images/ex5.PNG "Example 5")
+![Example 5](https://github.com/fkmiec/todo/blob/master/markdown/images/ex5.PNG "Example 5")
 
 ### Define a custom report in the .todorc file
 #### This example is a report sorted by id descending. You can, of course, show fewer columns, sort multiple and add filters
-![Example 6](https://github.com/fkmiec/todolist/blob/master/markdown/images/ex6.PNG "Example 6")
+![Example 6](https://github.com/fkmiec/todo/blob/master/markdown/images/ex6.PNG "Example 6")
 
-![Example 7](https://github.com/fkmiec/todolist/blob/master/markdown/images/ex7.PNG "Example 7")
+![Example 7](https://github.com/fkmiec/todo/blob/master/markdown/images/ex7.PNG "Example 7")
 
 ### Define aliases in .todorc to save typing on common commands
 #### This example provides a short hand for the top 2 per project filter
-![Example 8](https://github.com/fkmiec/todolist/blob/master/markdown/images/ex8.PNG "Example 8")
+![Example 8](https://github.com/fkmiec/todo/blob/master/markdown/images/ex8.PNG "Example 8")
 
-![Example 9](https://github.com/fkmiec/todolist/blob/master/markdown/images/ex9.PNG "Example 9")
+![Example 9](https://github.com/fkmiec/todo/blob/master/markdown/images/ex9.PNG "Example 9")
 
 ### Define named view filters in .todorc that can be applied by default when listing todos (ie. 'td' or 'td list' or 'td default')
 #### Below are defined two views. One for the Home context. The other for "work", which is defined as anything that isn't Home (ie. "minus" -@Home)
-![Example 10](https://github.com/fkmiec/todolist/blob/master/markdown/images/ex10.PNG "Example 10")
+![Example 10](https://github.com/fkmiec/todo/blob/master/markdown/images/ex10.PNG "Example 10")
 
-![Example 11](https://github.com/fkmiec/todolist/blob/master/markdown/images/ex11.PNG "Example 11")
+![Example 11](https://github.com/fkmiec/todo/blob/master/markdown/images/ex11.PNG "Example 11")
 
-![Example 12](https://github.com/fkmiec/todolist/blob/master/markdown/images/ex12.PNG "Example 12")
+![Example 12](https://github.com/fkmiec/todo/blob/master/markdown/images/ex12.PNG "Example 12")
 
-![Example 13](https://github.com/fkmiec/todolist/blob/master/markdown/images/ex13.PNG "Example 13")
+![Example 13](https://github.com/fkmiec/todo/blob/master/markdown/images/ex13.PNG "Example 13")
 
 ### Ordinals for "all" todos and each project and context
 Added support for setting an ordinal value for each todo relative to:
@@ -136,5 +136,5 @@ TBD
 
 ## License
 
-Todolist is open source, and uses the [MIT license](https://github.com/fkmiec/todolist/blob/master/LICENSE.md).
+Todolist is open source, and uses the [MIT license](https://github.com/fkmiec/todo/blob/master/LICENSE.md).
 
