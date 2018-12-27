@@ -22,7 +22,12 @@ type Config struct {
 	CurrentView              string
 	SyncFilepath             string
 	SyncEncryptionPassphrase string
-	Hooks                    map[string]string
+	OpenNotesFolder string
+	OpenNotesExt string
+	OpenNotesRegex string
+	OpenNotesCmd string
+	OpenCustomRegex map[string]string
+	OpenCustomCmd map[string]string
 }
 
 //Declare Priority global because need access in filter and sorter
@@ -36,8 +41,10 @@ func NewConfigStore() *ConfigStore {
 
 func (f *ConfigStore) Load() (*Config, error) {
 	f.FileLocation = getConfigLocation()
-
-	// init with some bogus data
+	usr, _ := user.Current()
+	notesDir := fmt.Sprintf("%s/.todo_notes", usr.HomeDir)
+	
+	// init with some defaults
 	config := Config{
 		Aliases:                  map[string]string{"alias.report": "list"},
 		Reports:                  map[string]map[string]string{},
@@ -45,8 +52,18 @@ func (f *ConfigStore) Load() (*Config, error) {
 		CurrentView:              "",
 		SyncFilepath:             "",
 		SyncEncryptionPassphrase: "",
-		Hooks:                    map[string]string{},
+		OpenNotesFolder: 		  notesDir,
+		OpenNotesExt:			  ".txt",
+		OpenNotesRegex:			  "notes",
+		OpenNotesCmd:			  "",
+		OpenCustomRegex: 		  map[string]string{},
+		OpenCustomCmd: 			  map[string]string{},
 	}
+	//Default regex for web URLs
+	config.OpenCustomRegex["browser"] = "((((https?://)?(www.))|(https?://))\\S+)"
+	//Default regex for files
+	config.OpenCustomRegex["file"] = "((\\/|\\.\\/|~\\/|\\w:\\/)\\S+)"
+
 	// default values for priority
 	Priority = map[string]int{"H": 1, "M": 2, "L": 3}
 
@@ -111,9 +128,28 @@ func (f *ConfigStore) Load() (*Config, error) {
 					config.SyncFilepath = strings.TrimSpace(value)
 				} else if strings.HasPrefix(key, "sync.encrypt.passphrase") {
 					config.SyncEncryptionPassphrase = strings.TrimSpace(value)
-				} else if strings.HasPrefix(key, "hooks.") {
-					hook := key[6:]
-					config.Hooks[hook] = value
+				} else if strings.HasPrefix(key, "open") {
+					keys := strings.Split(key, ".")
+					if len(keys) < 3 { continue }
+					if keys[1] == "notes" {
+						switch keys[2] {
+						case "ext":
+							config.OpenNotesExt = strings.TrimSpace(value)
+						case "folder":
+							config.OpenNotesFolder = strings.TrimSpace(value)
+						case "cmd":
+							config.OpenNotesCmd = strings.TrimSpace(value)
+						case "regex":
+							config.OpenNotesRegex = strings.TrimSpace(value)
+						}
+					} else {
+						switch keys[2] {
+						case "regex":
+							config.OpenCustomRegex[strings.TrimSpace(keys[1])] = strings.TrimSpace(value)
+						case "cmd":
+							config.OpenCustomCmd[strings.TrimSpace(keys[1])] = strings.TrimSpace(value)
+						}
+					}
 				}
 			}
 		}
@@ -218,16 +254,12 @@ func CreateDefaultConfig() error {
 	writer := bufio.NewWriter(file)
 	_, err = writer.WriteString("## Notes on reports and commands. Type 'todolist help' for details and examles.\n")
 	_, err = writer.WriteString("## Columns: 'id' 'completed' 'age' 'due' 'context' 'project' 'ord:all' 'ord:pro' 'ord:ctx'\n")
-	_, err = writer.WriteString("## Filters:\n")
-	_, err = writer.WriteString("###### '+<project name>'\n")
-	_, err = writer.WriteString("###### '@<context name>'\n")
-	_, err = writer.WriteString("###### 'due:<date or relative date>'\n")
-	_, err = writer.WriteString("###### 'age:<num or range of days>'\n")
-	_, err = writer.WriteString("###### '<id, range or list of ids>'\n")
-	_, err = writer.WriteString("###### 'top:<pro or ctx>:<number>'\n")
-	_, err = writer.WriteString("###### '<subject keywords>'\n")
-	_, err = writer.WriteString("###### Filter Exclusion: Prefix the filter with '-' to include todos that do NOT match that filter.\n")
-	_, err = writer.WriteString("## Sorting: '+/-' plus 'id' 'age' 'due' 'context' 'project' 'ord:all' 'ord:pro' 'ord:ctx'\n")
+	_, err = writer.WriteString("## Headers: Labels for the columns.\n")
+	_, err = writer.WriteString("## Sort: '+/-' plus 'id' 'age' 'due' 'context' 'project' 'ord:all' 'ord:pro' 'ord:ctx'\n")
+	_, err = writer.WriteString("## Filter: Show results matching projects, contexts, due dates, etc.\n")
+	_, err = writer.WriteString("###### Exclusion: Prefix the filter with '-' to include todos that do NOT match that filter.\n")
+	_, err = writer.WriteString("## Group: Show results grouped by 'project' or 'context'\n")
+	_, err = writer.WriteString("## Notes: Show notes if true.\n")
 	_, err = writer.WriteString("\n")
 	_, err = writer.WriteString("## Define a default report format used to print tasks to terminal\n")
 	_, err = writer.WriteString("report.default.description='Default report of pending todos'\n")
@@ -235,10 +267,15 @@ func CreateDefaultConfig() error {
 	_, err = writer.WriteString("report.default.headers=Id,Status,Age,Due,Context,Project,Subject\n")
 	_, err = writer.WriteString("report.default.sort=+project,+due\n")
 	_, err = writer.WriteString("report.default.filter=\n")
+	_, err = writer.WriteString("report.default.group=project\n")
+	_, err = writer.WriteString("#report.default.notes=true\n")
+	_, err = writer.WriteString("\n")
+	_, err = writer.WriteString("## Define custom priorities. Default is H,M,L.\n")
+	_, err = writer.WriteString("#priority=H,M,L\n")
 	_, err = writer.WriteString("\n")
 	_, err = writer.WriteString("## Define sync file path and encryption passphrase.\n")
 	_, err = writer.WriteString("###### encrypt.passphrase options: actual passphrase, *=prompt, <blank>=do not encrypt.\n")
-	_, err = writer.WriteString("###### filepath includes filename and directory must exist.\n")
+	_, err = writer.WriteString("###### filepath includes filename. Directory must exist.\n")
 	_, err = writer.WriteString("sync.encrypt.passphrase=*\n")
 	_, err = writer.WriteString("sync.filepath=./backup/todo_sync.json\n")
 	_, err = writer.WriteString("\n")
@@ -251,6 +288,23 @@ func CreateDefaultConfig() error {
 	_, err = writer.WriteString("\n")
 	_, err = writer.WriteString("## Set the currently applied view filter\n")
 	_, err = writer.WriteString("#view.current=home\n")
+	_, err = writer.WriteString("\n")
+	_, err = writer.WriteString("## Configure the open command. Below are all defaults. Uncomment and change to override.\n")
+	_, err = writer.WriteString("## Notes folder. If you sync, use a location available to other computers. E.g. a cloud drive\n")
+	_, err = writer.WriteString("#open.notes.folder=~/.todo_notes\n")
+	_, err = writer.WriteString("# Extension for notes\n")
+	_, err = writer.WriteString("#open.notes.ext=.txt\n")
+	_, err = writer.WriteString("# Command that opens notes\n")
+	_, err = writer.WriteString("#open.notes.cmd=mousepad\n")
+	_, err = writer.WriteString("# Regular expression if matched opens a notes file for a todo\n")
+	_, err = writer.WriteString("#open.notes.regex=notes\n")
+	_, err = writer.WriteString("## Define regex and (optionally) commands for open command to open differnt URI types.\n")
+	_, err = writer.WriteString("# Web URLs (www|http)\n")
+	_, err = writer.WriteString("#open.browser.regex=((((https?://)?(www.))|(https?://))\\S+)\n")
+	_, err = writer.WriteString("#open.browser.cmd=netsurf\n")
+	_, err = writer.WriteString("# File paths\n")
+	_, err = writer.WriteString("#open.file.regex=((\\/|\\.\\/|~\\/|\\w:\\/\\w)\\S+)\n")
+
 
 	err = writer.Flush()
 	if err != nil {

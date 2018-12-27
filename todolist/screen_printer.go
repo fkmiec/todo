@@ -395,6 +395,7 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	f.printCols(colors, "  unarchive | uar", "Un-archive one ore more todos. Select todos by filter (see below).")
 	f.printCols(colors, "  ac", "Archive all completed todos.")
 	f.printCols(colors, "  sync", "Synchronize todos with another file location. See .todorc file for sample config.")
+	f.printCols(colors, "  open", "Open a file or URL referenced in a todo note. The value 'notes' opens a todo-specific text file.")
 	f.printCols(colors, "  an", "Add a note to one or more todos. Select todos by filter (see below).")
 	f.printCols(colors, "  en", "Edit a note for one or more todos. Select todos by filter (see below).")
 	f.printCols(colors, "  dn", "Delete a note for one or more todos. Select todos by filter (see below).")
@@ -584,6 +585,36 @@ func (f *ScreenPrinter) PrintDeleteHelp() {
 	f.printCols(colors2, "  Example:  ", "todo +BigProject d")
 	f.printCols(colors1, "Delete all waiting todos.")
 	f.printCols(colors2, "  Example:  ", "todo waiting d")		
+	f.Writer.Flush()
+}
+
+func (f *ScreenPrinter) PrintOpenHelp() {
+	colors1 := []func(a ...interface{}) string {f.fgYellow}
+	f.printCols(colors1, "Open a file or URL referenced in a todo note.")
+	f.printCols(colors1, "Uses system default program or configured command.")
+	f.Writer.Flush()
+
+	fmt.Println("")
+	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
+	f.printCols(colors1, "  Syntax: ", "todo <filter> open <args>")
+	f.Writer.Flush()
+
+	fmt.Println("")
+	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
+	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
+	f.printCols(colors1, "Create and open a notes file associated with a todo")
+	f.printCols(colors2, "  Example:  ", "todo 1 an notes")
+	f.printCols(colors2, "            ", "todo 1 open")
+	f.printCols(colors1, "Open a web URL associated with a todo")
+	f.printCols(colors2, "  Example:  ", "todo 2 an Find stuff using www.google.com")
+	f.printCols(colors2, "            ", "todo 2 open")	
+	f.printCols(colors1, "Open a .docx file associated with a todo")
+	f.printCols(colors2, "  Example:  ", "todo 3 an Review C:/Documents/important.docx for the boss.")
+	f.printCols(colors2, "            ", "todo 3 open")	
+	f.printCols(colors1, "Open the URI associated with third note of todo with id 1. Notes indexing starts at 0.")
+	f.printCols(colors2, "  Example:  ", "todo 1 open 2")
+	f.printCols(colors1, "Open a URI for a note in verbose mode to help debug issues with configured regex.")
+	f.printCols(colors2, "  Example:  ", "todo 1 open verbose")
 	f.Writer.Flush()
 }
 
@@ -954,6 +985,9 @@ func (f *ScreenPrinter) PrintConfigHelp() {
 	f.printCols(colors2, "  report.<name>.sort  ", "Multi-sorting instructions (comma-sep). [+/-][id|age|due|context|project|ord:all|ord:pro|ord:ctx]")
 	f.printCols(colors2, "  report.<name>.filter  ", "Filters (comma-sep). See main 'help' for details on filters.")
 	f.printCols(colors2, "  report.<name>.group  ", "[project | context]")
+	f.printCols(colors2, "  report.<name>.notes  ", "[true|false]")
+	f.printCols(colors1, "Configure priority values. Default is H,M,L.")
+	f.printCols(colors2, "  priority  ", "[comma-separated values] Order highest to lowest (e.g. H,M,L).")
 	f.printCols(colors1, "Configure synchronization of todos to another file location.")
 	f.printCols(colors2, "  sync.filepath  ", "[Path to file including filename. Directory must exist.]")
 	f.printCols(colors2, "  sync.encrypt.passphrase  ", "[passphrase | * (prompt) | <blank> (don't encrypt)]")
@@ -963,5 +997,17 @@ func (f *ScreenPrinter) PrintConfigHelp() {
 	f.printCols(colors2, "  view.<name>.filter  ", "[comma-separated filters. E.g. @home,due:any]")
 	f.printCols(colors1, "Set the currently applied view filter from list of views defined. Change with 'view' command.")
 	f.printCols(colors2, "  view.current  ", "[view name]")
+	f.printCols(colors1, "Configure the open command")
+	f.printCols(colors2, "  open.notes.folder  ", "[path to notes folder]")
+	f.printCols(colors2, "  open.notes.ext  ", "[file extension for notes file]")
+	f.printCols(colors2, "  open.notes.regex  ", "[regex to match to open notes file]")
+	f.printCols(colors2, "  open.notes.cmd  ", "[command to open notes file]")
+	f.printCols(colors1, "Configure file and URI types and commands to open them. Uses system default if not specified.")
+	f.printCols(colors2, "  open.browser.regex  ", "[regex to match browser URLs]")
+	f.printCols(colors2, "  open.browser.cmd  ", "[command to open browser URLs]")
+	f.printCols(colors2, "  open.file.regex  ", "[regex to match file paths]")
+	f.printCols(colors2, "  open.file.cmd  ", "[command to open file paths]")
+	f.printCols(colors2, "  open.<type>.regex  ", "[regex to match <type> paths]")
+	f.printCols(colors2, "  open.<type>.cmd  ", "[command to open <type> paths]")
 	f.Writer.Flush()
 }

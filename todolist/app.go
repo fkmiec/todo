@@ -3,11 +3,11 @@ package todolist
 import (
 	"fmt"
 	"os"
-	//"regexp"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
-	"os/user"
+	//"os/user"
 	"github.com/skratchdot/open-golang/open"
 )
 
@@ -442,6 +442,25 @@ func (a *App) NewWebApp(c *CommandImpl) {
 	}
 }
 
+type OpenTask struct {
+	Todo *Todo
+	NoteIndex int
+	UriType string
+	Uri string
+	Cmd string
+}
+
+func NewOpenTask(todo *Todo, idx int, uriType string, uri string, cmd string) *OpenTask {
+	openTask := &OpenTask{
+		Todo: todo,
+		NoteIndex: idx,
+		UriType: uriType,
+		Uri: uri,
+		Cmd: cmd,
+	}
+	return openTask
+}
+
 func (a *App) Open(c *CommandImpl) {
 	if err := a.LoadPending(); err != nil {
 		os.Exit(1)
@@ -451,29 +470,184 @@ func (a *App) Open(c *CommandImpl) {
 			fmt.Println("No todos matching filter criteria.")
 			return
 		}
+		openNotesRegex, err := regexp.Compile(a.Cfg.OpenNotesRegex)
+		if err != nil {
+			fmt.Println("Error compiling notes regex: " + a.Cfg.OpenNotesRegex)
+			os.Exit(1)
+		}
+		openCustomRegex := map[string]*regexp.Regexp{}
+		for k,v := range a.Cfg.OpenCustomRegex {
+			re, err := regexp.Compile(v)
+			if err != nil {
+				fmt.Println("Error compiling regex. ", k, "=", v)
+				os.Exit(1)
+			}
+			openCustomRegex[k] = re
+		}
+		openCustomCmd := map[string]string{}
+		for k,v := range a.Cfg.OpenCustomCmd {
+			openCustomCmd[k] = v
+		}
+		
+		chosenNoteIndex := -1
+		verbose := false
+		if len(c.Args) > 0 {
+			for _, arg := range c.Args {
+				if arg == "verbose" {
+					verbose = true
+				} else {
+					if idx, err := strconv.Atoi(arg); err == nil {
+						chosenNoteIndex = idx
+					}
+				}
+			}
+		}
+
+		openTasks := []*OpenTask{}
+
 		var notes []string
 		for _, todo := range todos {
 			notes = todo.Notes
-			for _, note := range notes {
-				note = strings.ToLower(note)
-				if strings.TrimSpace(note) == "notes" {
-					a.openNotes(todo.Uuid)
-				} else if len(c.Args) > 0 {
-					a.openUri(c.Args[0])
+			for noteIndex, note := range notes {
+				if chosenNoteIndex > -1 && noteIndex != chosenNoteIndex {
+					continue
+				}
+				if verbose {
+				println("Todo Uuid: " + todo.Uuid)
+				println("Todo Note: '" + note + "'")
+				println("Open file type: notes")
+				println("Open regex: '" + a.Cfg.OpenNotesRegex + "'")
+				}
+				if openNotesRegex.MatchString(strings.TrimSpace(note)) {
+					if verbose {
+						if a.Cfg.OpenNotesCmd != "" {
+							println("Matched notes regex. Opening notes with command '" + a.Cfg.OpenNotesCmd + "'")
+						} else {
+							println("Matched notes regex. Opening notes with default command")
+						}
+					}
+					//a.openNotes(todo.Uuid, a.Cfg.OpenNotesCmd)
+					openTasks = append(openTasks, NewOpenTask(todo, noteIndex, "note", "notes", a.Cfg.OpenNotesCmd))
+				} else {
+					/*
+					NOTE - Browser URL was sort of a bitch to get right. 
+						   Would prefer to match things like github.com, 
+						   but requries www.github.com or http://github.com
+						   to avoid over-matching.
+					# Regular expression that identifies annotations openable by BROWSER.
+					# URL must start with www|http
+					open.browser.regex=((((https?://)?(www.))|(https?://))\S+)
+
+					# Regular expression to identify files in annotations
+					((\/|\.\/|~\/|\w:\/)\S+)
+					*/
+
+					//Preference browser match vs a file
+					var task *OpenTask
+
+					for k,v := range openCustomRegex {
+						if verbose {
+							println("Open regex not matched.")
+							println("Open file type: " + k)
+							println("Open regex: '" + a.Cfg.OpenCustomRegex[k] + "'")
+						}
+						if matches := v.FindStringSubmatch(note); len(matches) > 0 {
+							if cmd, ok := openCustomCmd[k]; ok {
+								if verbose {
+									println("Opening file " + matches[1] + " with command '" + openCustomCmd[k] + "'")
+								}
+								//a.openUriWithCmd(matches[1], cmd)
+								//openTasks = append(openTasks, NewOpenTask(todo, noteIndex, k, matches[1], cmd))
+								task = NewOpenTask(todo, noteIndex, k, matches[1], cmd)
+							} else {
+								if verbose {
+									println("Opening file: " + matches[1] + " with default command")
+								}
+								//a.openUri(matches[1])
+								//openTasks = append(openTasks, NewOpenTask(todo, noteIndex, k, matches[1], ""))
+								task = NewOpenTask(todo, noteIndex, k, matches[1], "")
+							}
+							//If matched browser type, quit so not overwritten by less specific file type matching
+							if k == "browser" {
+								break
+							}
+						} else {
+							if verbose {
+								println("Open regex not matched.")
+							}
+						}
+					}
+					if task != nil {
+						openTasks = append(openTasks, task)
+					}
+				}
+			}
+		}
+
+		//If more than one open task was found, let user choose
+		var task *OpenTask
+		if len(openTasks) > 1 {
+			task = selectOpenTaskInput(openTasks)
+		//Else just open it
+		} else if len(openTasks) > 0 {
+			task = openTasks[0]
+		} 
+		//Open the note
+		if task != nil {
+			if task.Uri == "notes" {
+				a.openNotes(task.Todo.Uuid, task.Cmd)
+			} else {
+				if task.Cmd == "" {
+					a.openUri(task.Uri)
+				} else {
+					a.openUriWithCmd(task.Uri, task.Cmd)
 				}
 			}
 		}
 	}
 }
 
-func (a *App) openUri(uri string) {
-	open.Start(uri)
+func selectOpenTaskInput(openTasks []*OpenTask) *OpenTask {
+	fmt.Println("Options: ")
+	for i, task := range openTasks {
+		fmt.Println("\t" + strconv.Itoa(i) + ") Todo " + strconv.Itoa(task.Todo.Id) + " (" + task.UriType + "): " + task.Uri)
+	}
+	fmt.Print("Select note to open: ")
+	var i int
+	_, err := fmt.Scanf("%d", &i)
+	if err == nil {
+		return openTasks[i]
+	} else {
+		return nil
+	}
+
+	//byteVal, _ := terminal.Read(int(syscall.Stdin))
+	//if err == nil {
+	//	fmt.Println("\nPassword typed: " + string(bytePassword))
+	//}
+	//val := string(byteVal)
+	//fmt.Println("")
+	//return strings.TrimSpace(password)
 }
 
-func (a *App) openNotes(uuid string) {
-	usr, _ := user.Current()
-	notesDir := fmt.Sprintf("%s/.todo_notes", usr.HomeDir)
-	notes := fmt.Sprintf("%s/%s_notes.txt", notesDir, uuid)
+func (a *App) openUri(uri string) {
+	err := open.Start(uri)
+	if err != nil {
+		println("Error opening uri " + uri + ": " + err.Error())
+	}
+}
+
+func (a *App) openUriWithCmd(uri string, cmd string) {
+	//err := open.StartWith(uri, cmd)
+	err := open.RunWith(uri, cmd)
+	if err != nil {
+		println("Error opening uri " + uri + ": " + err.Error())
+	}
+}
+
+func (a *App) openNotes(uuid string, cmd string) {
+	notesDir := a.Cfg.OpenNotesFolder
+	notes := fmt.Sprintf("%s/%s_notes" + a.Cfg.OpenNotesExt, notesDir, uuid)
 	if _, err := os.Stat(notesDir); os.IsNotExist(err) {
 		fmt.Println("Notes directory does not exist. Creating.")
 		err2 := os.MkdirAll(notesDir, 0755)
@@ -489,7 +663,11 @@ func (a *App) openNotes(uuid string) {
 		}
 		fd.Close()
 	} 
-	a.openUri(notes)
+	if cmd != "" {
+		a.openUriWithCmd(notes, cmd)
+	} else {
+		a.openUri(notes)
+	}
 }
 
 func (a *App) PrintHelp(c *CommandImpl) {
@@ -543,6 +721,8 @@ func (a *App) PrintHelp(c *CommandImpl) {
 				p.PrintInitHelp()
 			case "config":
 				p.PrintConfigHelp()
+			case "open":
+				p.PrintOpenHelp()
 			}
 		}
 	}

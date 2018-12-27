@@ -1,8 +1,19 @@
-# Todolist
+# Todo
 
-This is a fork of the Todolist project by Grant Ammons. I'm a big fan of TaskWarrior, but wanted a simpler cross-platform solution and wanted to learn Golang. Most of the work here follows the lead of TaskWarrior. 
+This is a fork of the Todolist project by Grant Ammons. I'm a big fan of TaskWarrior, but wanted a simpler, cross-platform, solution and wanted to learn Golang. Most of the work here follows the lead of TaskWarrior. 
 
 Todolist is a simple and very fast task manager for the command line.
+
+## Feature highlights:  
+1) Manual ordering. For when sorting by due date or priority isn't enough.  
+2) Todo open. Inspired by TaskOpen. Opens a file or URI referenced in a todo note.  
+3) Synchronization. Backup or sync todos between PCs using a cloud drive. Performs a merge so that todos added, modified or removed on one PC are reflected in the other.  
+4) Reports. Configure columns, sorting, grouping and filtering as desired.  
+5) Alias commands. Configure shorthand aliases for common commands.  
+6) Help. Just type 'todo help' or 'todo help <\command>' or 'todo help config'.  
+
+## Building
+Assumes golang is installed and GOPATH is set. Clone repository to somewhere on the GOPATH. Type go install github.com/fkmiec/todo. 
 
 ## Documentation
 ### Usage
@@ -12,9 +23,9 @@ Todolist is a simple and very fast task manager for the command line.
 
 ### Basic Tutorial
 
-First, create a command alias for 'todolist' to something shorter and easier to type like 'td'. From here on, we'll just refer to 'td'. 
+First, create a command alias for 'todo' to something shorter and easier to type like 'td'. From here on, we'll just refer to 'td'. 
 
-alias td = todolist
+alias td = todo
 
 ### Create a Todo repository (Create in current directory. If created in home directory, will look there absent a repo in the local directory.)
 $ td init  
