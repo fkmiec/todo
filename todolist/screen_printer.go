@@ -84,8 +84,8 @@ func (f *ScreenPrinter) PrintSetCounts(set string, m map[string]int) {
 	} else if set == "Contexts" {
 		setColor = f.fgRed
 	}
-	set = f.fgGreen(set + ":")
-	fmt.Println(set)
+	
+	fmt.Fprintf(f.Writer, "%s:\n", set)
 	for k, v := range m {
 		k = setColor(k)
 		val := valColor(v)
