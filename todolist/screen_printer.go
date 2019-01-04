@@ -350,12 +350,12 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	f.PrintRow(tmp)
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors := []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors, "  Syntax:", "todo [filters] <command> [modifiers] [args]")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors = []func(a ...interface{}) string {f.fgGreen, f.fgGreen}
 	f.printCols(colors, "  Command", "Description")
 	colors = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
@@ -383,8 +383,8 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	f.printCols(colors, "  gc", "Garbage collect (permanently delete) all archived todos.")
 	f.Writer.Flush()
 
-	println("")
-	println(f.fgGreen("  Date specifiers used in filters and modifiers:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "  Date specifiers used in filters and modifiers:")
 	f.printCols(colors, "    tod(ay)|tom(orrow)|yes(terday)|this_week|next_week|last_week", "Relative date.")
 	f.printCols(colors, "    mon|tue|wed|thu|fri|sat|sun", "Day of the week.")
 	f.printCols(colors, "    1d|1w|1m|1y", "Date calculated using relative duration from today.")
@@ -393,8 +393,8 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	f.printCols(colors, "    overdue", "Past due todos.")
 	f.Writer.Flush()
 
-	println("")
-	println(f.fgGreen("  Filters: "))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "  Filters: ")
 	f.printCols(colors, "    [id or id range]", "Filter for specific id (e.g. 4) or range of ids (e.g. 4-7).")
 	f.printCols(colors, "    +[project name]", "Filter for todos with the specified project.")
 	f.printCols(colors, "    -[project name]", "Filter for todos WITHOUT the specified project.")
@@ -412,8 +412,8 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	f.printCols(colors, "    [search words]", "Filter for todos with search words in the subject. Must not match other filters above.")
 	f.Writer.Flush()
 
-	println("")
-	println(f.fgGreen("  Modifiers:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "  Modifiers:")
 	f.printCols(colors, "    +[project name]", "Add a project.")
 	f.printCols(colors, "    -[project name]", "Remove a project.")
 	f.printCols(colors, "    @[context name]", "Add a context.")
@@ -424,16 +424,20 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	f.printCols(colors, "    pri:[priority specifier]", "Add or change the priority. Configurable. Default values are H,M,L.")
 	f.Writer.Flush()
 
-	println("")
-	println(f.fgGreen("  Arguments (Generally only for list or report commands):"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "  Arguments (Generally only for list or report commands):")
 	f.printCols(colors, "    sort:[+|-][id|project|context|ord:[all|pro|ctx]|due|age|priority]", "Override sort for the todo list.")
 	f.printCols(colors, "    filter:[+|-][see filters above]", "Override filters for todo list.")
 	f.printCols(colors, "    group:[project | context]", "Group todos by project or context. Override group config for todo list.")
 	f.printCols(colors, "    notes:[true or false]", "List of todos will include the notes for todos that have them.")
 	f.Writer.Flush()
 	
-	println("")
-	println(f.fgGreen("  For full documentation, please visit http://github.com/fkmiec/todolist"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "  For full documentation, please visit http://github.com/fkmiec/todolist")
+}
+
+func (f *ScreenPrinter) println(color func(a ...interface{}) string, line string) {
+	fmt.Fprintln(f.Writer, color(line))
 }
 
 func (f *ScreenPrinter) printCols(colors []func(a ...interface{}) string, txt ...string) {
@@ -449,13 +453,13 @@ func (f *ScreenPrinter) PrintAddHelp() {
 	f.printCols(colors1, "Add a todos")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo [add | a] [modifiers]")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Examples for adding a todo:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for adding a todo:")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Add todo with project (BigProject), context (Bob) and due date using relative date.")
@@ -474,13 +478,13 @@ func (f *ScreenPrinter) PrintListHelp() {
 	f.printCols(colors1, "List todos")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo [filters] [list | l | <blank>] [arguments]")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Examples for listing todos:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for listing todos:")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "List all pending todos using default report and default command.")
@@ -521,13 +525,13 @@ func (f *ScreenPrinter) PrintEditHelp() {
 	f.printCols(colors1, "Edit todos")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo [filters] [edit | e] [modifiers]")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Examples for editing todos:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for editing todos:")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Edit the todo with id 2 to add a due date.")
@@ -550,13 +554,13 @@ func (f *ScreenPrinter) PrintDeleteHelp() {
 	f.printCols(colors1, "Delete todos")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo [filters] [delete | d]")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Examples for deleting todos:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for deleting todos:")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Delete the todo with id 2.")
@@ -574,12 +578,12 @@ func (f *ScreenPrinter) PrintOpenHelp() {
 	f.printCols(colors1, "Uses system default program or configured command.")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo <filter> open <args>")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Create and open a notes file associated with a todo")
@@ -603,12 +607,12 @@ func (f *ScreenPrinter) PrintProjectsHelp() {
 	f.printCols(colors1, "Print list of projects with count of todos for each")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo projects")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Print list of projects")
@@ -621,12 +625,12 @@ func (f *ScreenPrinter) PrintContextsHelp() {
 	f.printCols(colors1, "Print list of contexts with count of todos for each")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo contexts")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Print list of contexts")
@@ -639,12 +643,12 @@ func (f *ScreenPrinter) PrintPrintTodoDetailHelp() {
 	f.printCols(colors1, "Print details of todos")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo [filters] print")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Print details of todo with id 3")
@@ -659,12 +663,12 @@ func (f *ScreenPrinter) PrintGarbageCollectHelp() {
 	f.printCols(colors1, "Garbage Collect all archived todos")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo gc")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	fmt.Println(f.fgGreen("Examples for garbage collecting all archived todos:"))
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
@@ -678,13 +682,13 @@ func (f *ScreenPrinter) PrintDeleteNoteHelp() {
 	f.printCols(colors1, "Delete a note to a todo")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo [filters] dn [note index]")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Examples for deleting notes to todos:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for deleting notes to todos:")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Delete first note of todo with id 3. Note that notes index starts with 0.")
@@ -697,13 +701,13 @@ func (f *ScreenPrinter) PrintEditNoteHelp() {
 	f.printCols(colors1, "Edit a note to a todo")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo [filters] en [note index] [new note text]")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Examples for editing notes to todos:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for editing notes to todos:")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Edit second note of todo with id 1")
@@ -716,13 +720,13 @@ func (f *ScreenPrinter) PrintAddNoteHelp() {
 	f.printCols(colors1, "Add a note to a todo")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo [filters] an [note text]")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Examples for adding notes to todos:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for adding notes to todos:")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Add a URL as a note to the todo with id 1")
@@ -737,13 +741,13 @@ func (f *ScreenPrinter) PrintDoneHelp() {
 	f.printCols(colors1, "Add an already completed todo")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo done [modifiers]")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Examples for adding already completed todos:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for adding already completed todos:")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Add a completed todo with due date today and priority High.")
@@ -758,12 +762,12 @@ func (f *ScreenPrinter) PrintInitHelp() {
 	f.printCols(colors1, "Initialize a todo repo")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo init")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Initialize a repo in the current folder.")
@@ -777,12 +781,12 @@ func (f *ScreenPrinter) PrintViewHelp() {
 	f.printCols(colors1, "Set a 'view' (aka a default filter. Typically a context, such as home or work)")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo view [filters]")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Set view to context home. See .todorc config file for example of defining a view.")
@@ -800,13 +804,13 @@ func (f *ScreenPrinter) PrintSyncHelp() {
 	f.printCols(colors1, "Sync todos")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo sync [verbose]")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Examples for syncing todos:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for syncing todos:")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Sync todos to a configured alternate file location.")
@@ -822,13 +826,13 @@ func (f *ScreenPrinter) PrintOrderTodosHelp() {
 	f.printCols(colors1, "Order todos (relative to each other in groups 'all' or by project or by context).")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo [order | ord | reorder] [all|<project>|<context>]:[ids]")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Examples for [re]ordering todos:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for [re]ordering todos:")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Move todo with id 8 behind todo with id 14. Todo 14 will keep its position.")
@@ -848,13 +852,13 @@ func (f *ScreenPrinter) PrintUnarchiveHelp() {
 	f.printCols(colors1, "Unarchive todos")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo [filters] [unarchive | uar]")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Examples for un-archiving todos:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for un-archiving todos:")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Unarchive todo with id 8.")
@@ -867,13 +871,13 @@ func (f *ScreenPrinter) PrintArchiveCompletedHelp() {
 	f.printCols(colors1, "Archive all completed todos")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo ac")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Examples for archiving completed todos:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for archiving completed todos:")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Archive all completed todos.")
@@ -886,13 +890,13 @@ func (f *ScreenPrinter) PrintArchiveHelp() {
 	f.printCols(colors1, "Archive todos")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo [filters] [archive | ar]")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Examples for archiving todos:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for archiving todos:")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Archive the todo with id 7.")
@@ -907,13 +911,13 @@ func (f *ScreenPrinter) PrintCompleteHelp() {
 	f.printCols(colors1, "Complete todos")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo [filters] [complete | c]")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Examples for completing todos:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for completing todos:")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Complete the todo with id 2.")
@@ -928,13 +932,13 @@ func (f *ScreenPrinter) PrintUncompleteHelp() {
 	f.printCols(colors1, "Uncomplete todos")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Syntax: ", "todo [filters] [uncomplete | uc]")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Examples for un-completing todos:"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for un-completing todos:")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Uncomplete the todo with id 2.")
@@ -949,13 +953,13 @@ func (f *ScreenPrinter) PrintConfigHelp() {
 	f.printCols(colors1, "Configuration")
 	f.Writer.Flush()
 
-	fmt.Println("")
+	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string {f.fgCyan, f.fgYellow}
 	f.printCols(colors1, "  Filename: ", ".todorc")
 	f.Writer.Flush()
 
-	fmt.Println("")
-	fmt.Println(f.fgGreen("Configuration Attributes (key=value format):"))
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Configuration Attributes (key=value format):")
 	colors1 = []func(a ...interface{}) string {f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string {f.fgMagenta, f.fgYellow}
 	f.printCols(colors1, "Configure a report (format for listing todos). Report name is an alias for 'list'. Report 'default' will be applied if no other report name matched.")
