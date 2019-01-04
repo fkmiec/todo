@@ -41,30 +41,6 @@ func NewScreenPrinter() *ScreenPrinter {
 	return formatter
 }
 
-/*
-func (f *ScreenPrinter) Print(groupedTodos *GroupedTodos, printNotes bool) {
-	cyan := color.New(color.FgCyan).SprintFunc()
-	var keys []string
-	for key := range groupedTodos.Groups {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-
-	for _, key := range keys {
-		fmt.Fprintf(f.Writer, "\n %s\n", cyan(key))
-		for _, todo := range groupedTodos.Groups[key] {
-			f.printTodo(todo)
-			if printNotes {
-				for nid, note := range todo.Notes {
-					fmt.Fprintf(f.Writer, "   %s\t%s\t\n",
-						cyan(strconv.Itoa(nid)), note)
-				}
-			}
-		}
-	}
-	f.Writer.Flush()
-}
-*/
 func (f *ScreenPrinter) printTodo(todo *Todo) {
 
 	fmt.Fprintf(f.Writer, " %s\t%s\t%s\t%s\t%s\t%s\t\n",
@@ -214,6 +190,8 @@ func (f *ScreenPrinter) printColumnHeaders(cols []string, headers []string) {
 			vals = append(vals, f.fgGreen(headers[i]))
 		case "ord:ctx":
 			vals = append(vals, f.fgGreen(headers[i]))
+		case "notes":
+			vals = append(vals, f.fgGreen(headers[i]))
 		case "context":
 			vals = append(vals, f.fgGreen(headers[i]))
 		case "project":
@@ -262,6 +240,8 @@ func (f *ScreenPrinter) printCustomTodo(todo *Todo, cols []string) {
 			vals = append(vals, f.formatOrdinal(1, todo)) //1 = pro
 		case "ord:ctx":
 			vals = append(vals, f.formatOrdinal(2, todo)) //2 = ctx
+		case "notes":
+			vals = append(vals, f.fgYellow(strconv.Itoa(len(todo.Notes))))
 		case "context":
 			vals = append(vals, f.formatContexts(todo.Contexts))
 		case "project":
