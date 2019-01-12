@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	//"os/user"
 	"github.com/skratchdot/open-golang/open"
 )
@@ -406,6 +407,45 @@ func (a *App) ListContexts(c *CommandImpl) {
 	p.PrintSetCounts("Contexts", m)
 }
 
+func (a *App) Stats(c *CommandImpl) {
+	/*
+		pending, added, modified, completed, archived, deleted
+		per all, project or context
+		filtered by everything we allow to filter
+
+		td <filters> stats [by:all|pro|ctx] [cols:p,a,m,c,ar,d] [sum:all|daily|weekly|monthly]
+		output is tabular.
+		If sum and by:pro/ctx then group stats and row per day/week/month
+		If no sum (or sum:all) then no grouping and row per pro/ctx
+	*/
+
+	a.LoadPending()
+	var cols []string
+	var groupBy string
+	var sumBy string
+	var chart bool
+	for _, m := range c.Mods {
+		if strings.HasPrefix(m, "cols:") {
+			if strings.Contains(m, "ar") {
+				a.LoadArchived()
+			}
+			cols = strings.Split(m[5:], ",")
+		} else if strings.HasPrefix(m, "by:") {
+			groupBy = m[3:]
+		} else if strings.HasPrefix(m, "sum:") {
+			sumBy = m[4:]
+		} else if strings.HasPrefix(m, "chart:") {
+			chart = (m[6:] == "true")
+		}
+	}
+	filtered := NewToDoFilter(a.TodoList.Todos()).Filter(c.Filters)
+	if len(filtered) == 0 {
+		return
+	}
+	p := NewScreenPrinter()
+	p.PrintStats(filtered, groupBy, sumBy, cols, chart)
+}
+
 func (a *App) PrintTodoDetail(c *CommandImpl) {
 	a.LoadPending()
 	filtered := NewToDoFilter(a.TodoList.Todos()).Filter(c.Filters)
@@ -443,20 +483,20 @@ func (a *App) NewWebApp(c *CommandImpl) {
 }
 
 type OpenTask struct {
-	Todo *Todo
+	Todo      *Todo
 	NoteIndex int
-	UriType string
-	Uri string
-	Cmd string
+	UriType   string
+	Uri       string
+	Cmd       string
 }
 
 func NewOpenTask(todo *Todo, idx int, uriType string, uri string, cmd string) *OpenTask {
 	openTask := &OpenTask{
-		Todo: todo,
+		Todo:      todo,
 		NoteIndex: idx,
-		UriType: uriType,
-		Uri: uri,
-		Cmd: cmd,
+		UriType:   uriType,
+		Uri:       uri,
+		Cmd:       cmd,
 	}
 	return openTask
 }
@@ -476,7 +516,7 @@ func (a *App) Open(c *CommandImpl) {
 			os.Exit(1)
 		}
 		openCustomRegex := map[string]*regexp.Regexp{}
-		for k,v := range a.Cfg.OpenCustomRegex {
+		for k, v := range a.Cfg.OpenCustomRegex {
 			re, err := regexp.Compile(v)
 			if err != nil {
 				fmt.Println("Error compiling regex. ", k, "=", v)
@@ -485,10 +525,10 @@ func (a *App) Open(c *CommandImpl) {
 			openCustomRegex[k] = re
 		}
 		openCustomCmd := map[string]string{}
-		for k,v := range a.Cfg.OpenCustomCmd {
+		for k, v := range a.Cfg.OpenCustomCmd {
 			openCustomCmd[k] = v
 		}
-		
+
 		chosenNoteIndex := -1
 		verbose := false
 		if len(c.Args) > 0 {
@@ -513,10 +553,10 @@ func (a *App) Open(c *CommandImpl) {
 					continue
 				}
 				if verbose {
-				println("Todo Uuid: " + todo.Uuid)
-				println("Todo Note: '" + note + "'")
-				println("Open file type: notes")
-				println("Open regex: '" + a.Cfg.OpenNotesRegex + "'")
+					println("Todo Uuid: " + todo.Uuid)
+					println("Todo Note: '" + note + "'")
+					println("Open file type: notes")
+					println("Open regex: '" + a.Cfg.OpenNotesRegex + "'")
 				}
 				if openNotesRegex.MatchString(strings.TrimSpace(note)) {
 					if verbose {
@@ -530,22 +570,22 @@ func (a *App) Open(c *CommandImpl) {
 					openTasks = append(openTasks, NewOpenTask(todo, noteIndex, "note", "notes", a.Cfg.OpenNotesCmd))
 				} else {
 					/*
-					NOTE - Browser URL was sort of a bitch to get right. 
-						   Would prefer to match things like github.com, 
-						   but requries www.github.com or http://github.com
-						   to avoid over-matching.
-					# Regular expression that identifies annotations openable by BROWSER.
-					# URL must start with www|http
-					open.browser.regex=((((https?://)?(www.))|(https?://))\S+)
+						NOTE - Browser URL was sort of a bitch to get right.
+							   Would prefer to match things like github.com,
+							   but requries www.github.com or http://github.com
+							   to avoid over-matching.
+						# Regular expression that identifies annotations openable by BROWSER.
+						# URL must start with www|http
+						open.browser.regex=((((https?://)?(www.))|(https?://))\S+)
 
-					# Regular expression to identify files in annotations
-					((\/|\.\/|~\/|\w:\/)\S+)
+						# Regular expression to identify files in annotations
+						((\/|\.\/|~\/|\w:\/)\S+)
 					*/
 
 					//Preference browser match vs a file
 					var task *OpenTask
 
-					for k,v := range openCustomRegex {
+					for k, v := range openCustomRegex {
 						if verbose {
 							println("Open regex not matched.")
 							println("Open file type: " + k)
@@ -588,10 +628,10 @@ func (a *App) Open(c *CommandImpl) {
 		var task *OpenTask
 		if len(openTasks) > 1 {
 			task = selectOpenTaskInput(openTasks)
-		//Else just open it
+			//Else just open it
 		} else if len(openTasks) > 0 {
 			task = openTasks[0]
-		} 
+		}
 		//Open the note
 		if task != nil {
 			if task.Uri == "notes" {
@@ -647,7 +687,7 @@ func (a *App) openUriWithCmd(uri string, cmd string) {
 
 func (a *App) openNotes(uuid string, cmd string) {
 	notesDir := a.Cfg.OpenNotesFolder
-	notes := fmt.Sprintf("%s/%s_notes" + a.Cfg.OpenNotesExt, notesDir, uuid)
+	notes := fmt.Sprintf("%s/%s_notes"+a.Cfg.OpenNotesExt, notesDir, uuid)
 	if _, err := os.Stat(notesDir); os.IsNotExist(err) {
 		fmt.Println("Notes directory does not exist. Creating.")
 		err2 := os.MkdirAll(notesDir, 0755)
@@ -662,7 +702,7 @@ func (a *App) openNotes(uuid string, cmd string) {
 			fmt.Println("Error creating notes file: ", err2.Error())
 		}
 		fd.Close()
-	} 
+	}
 	if cmd != "" {
 		a.openUriWithCmd(notes, cmd)
 	} else {
@@ -677,25 +717,25 @@ func (a *App) PrintHelp(c *CommandImpl) {
 	} else {
 		for _, arg := range c.Args {
 			switch arg {
-			case "add","a":
+			case "add", "a":
 				p.PrintAddHelp()
-			case "list","l":
+			case "list", "l":
 				p.PrintListHelp()
-			case "edit","e":
+			case "edit", "e":
 				p.PrintEditHelp()
-			case "delete","d":
+			case "delete", "d":
 				p.PrintDeleteHelp()
 			case "done":
 				p.PrintDoneHelp()
-			case "complete","c":
+			case "complete", "c":
 				p.PrintCompleteHelp()
-			case "uncomplete","uc":
+			case "uncomplete", "uc":
 				p.PrintUncompleteHelp()
-			case "archive","ar":
+			case "archive", "ar":
 				p.PrintArchiveHelp()
-			case "unarchive","uar":
+			case "unarchive", "uar":
 				p.PrintUnarchiveHelp()
-			case "order","ord","reorder":
+			case "order", "ord", "reorder":
 				p.PrintOrderTodosHelp()
 			case "an":
 				p.PrintAddNoteHelp()
@@ -799,15 +839,15 @@ type Command interface {
 
 func NewCommand(cmd string, iam bool, iaa bool, ef func(c *CommandImpl)) *CommandImpl {
 	c := CommandImpl{
-		Cmd: cmd,
+		Cmd:          cmd,
 		IsAcceptMods: iam,
 		IsAcceptArgs: iaa,
-		ExecFunc: ef,
+		ExecFunc:     ef,
 	}
 	return &c
 }
 
-//Define command 
+//Define command
 
 type CommandImpl struct {
 	Cmd          string
@@ -816,7 +856,7 @@ type CommandImpl struct {
 	Args         []string
 	IsAcceptMods bool
 	IsAcceptArgs bool
-	ExecFunc	 func (c *CommandImpl)
+	ExecFunc     func(c *CommandImpl)
 }
 
 func (c *CommandImpl) Exec(a *App) {
@@ -891,7 +931,7 @@ func (c *ReportCmd) Exec(a *App) {
 
 	//Process args
 	// notes:<bool> - Show \ Hide the notes
-	// sort:<replace sorting> - Modify sorting 
+	// sort:<replace sorting> - Modify sorting
 	// filter:<replace filters>
 	// group:<replace group>
 	groupBy := ""
@@ -1021,4 +1061,7 @@ func (a *App) mapCommands() {
 
 	openCmd := NewCommand("help", false, true, a.Open)
 	a.CommandMap["open"] = openCmd
+
+	statsCmd := NewCommand("stats", true, false, a.Stats)
+	a.CommandMap["stats"] = statsCmd
 }

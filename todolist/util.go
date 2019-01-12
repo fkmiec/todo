@@ -43,6 +43,30 @@ func timestamp(t time.Time) time.Time {
 	return time.Date(year, month, day, hour, min, sec, 0, t.Location())
 }
 
+func GetStartOfDay(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+}
+
+func GetFirstOfMonth(t time.Time) time.Time {
+	for {
+		if t.Day() != 1 {
+			t = t.AddDate(0, 0, -1)
+		} else {
+			return GetStartOfDay(t)
+		}
+	}
+}
+
+func GetNearestSunday(t time.Time) time.Time {
+	for {
+		if t.Weekday() != time.Sunday {
+			t = t.AddDate(0, 0, -1)
+		} else {
+			return GetStartOfDay(t)
+		}
+	}
+}
+
 func getNearestMonday(t time.Time) time.Time {
 	for {
 		if t.Weekday() != time.Monday {

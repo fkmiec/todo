@@ -82,24 +82,6 @@ func (p *Parser) ParseEditTodo(todo *Todo, mods []string, todolist *TodoList) bo
 	return true
 }
 
-func (p *Parser) ExpandProject(mods []string) string {
-
-	fmt.Println("ToDo - Figure out how this ExpandProject function is supposed to work")
-	/*
-		input := "ex " + strings.join(mods)
-		r, _ := regexp.Compile(`(ex|expand) +\d+ +\+[\p{L}\d_-]+:`)
-		pattern := r.FindString(input)
-		if len(pattern) == 0 {
-			return ""
-		}
-
-		newProject := pattern[0 : len(pattern)-1]
-		project := strings.Split(newProject, " ")
-		return project[len(project)-1]
-	*/
-	return ""
-}
-
 func (p *Parser) Projects(filters []string) []string {
 	projects := []string{}
 	for _, filter := range filters {

@@ -9,8 +9,8 @@ type lessFunc func(p1, p2 *Todo) int
 
 // multiSorter implements the Sort interface, sorting the changes within.
 type TodoSorter struct {
-	todos []*Todo
-	less  []lessFunc
+	todos       []*Todo
+	less        []lessFunc
 	SortColumns []string
 }
 
@@ -51,6 +51,8 @@ func NewTodoSorter(sortCols ...string) *TodoSorter {
 			sorters = append(sorters, OrdinalProject(asc))
 		case "ord:ctx":
 			sorters = append(sorters, OrdinalContext(asc))
+		case "created":
+			sorters = append(sorters, Created(asc))
 		case "subject":
 			sorters = append(sorters, Subject(asc))
 		}
@@ -267,6 +269,25 @@ func Due(asc bool) lessFunc {
 		}
 	}
 	return due
+}
+
+func Created(asc bool) lessFunc {
+	d := func(t1, t2 *Todo) int {
+		ret := 0
+		if t1.CreatedDate < t2.CreatedDate {
+			ret = -1
+		} else if t1.CreatedDate > t2.CreatedDate {
+			ret = 1
+		} else {
+			ret = 0
+		}
+		if asc {
+			return ret
+		} else {
+			return -1 * ret
+		}
+	}
+	return d
 }
 
 func Project(asc bool) lessFunc {
