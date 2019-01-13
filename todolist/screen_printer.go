@@ -355,7 +355,7 @@ func (f *ScreenPrinter) formatCompleted(completed bool) string {
 	If sum and by:pro/ctx then group stats and row per day/week/month
 	If no sum (or sum:all) then no grouping and row per pro/ctx
 */
-func (f *ScreenPrinter) PrintStats(filtered []*Todo, groupBy string, sumBy string, cols []string, chart bool) {
+func (f *ScreenPrinter) PrintStats(filtered []*Todo, groupBy string, sumBy string, cols []string, chart bool, rangeTimes []time.Time) {
 	var sum int
 	var sumString string
 	if strings.HasPrefix(strings.ToLower(sumBy), "w") {
@@ -369,7 +369,7 @@ func (f *ScreenPrinter) PrintStats(filtered []*Todo, groupBy string, sumBy strin
 		sumString = "Day"
 	}
 	statsData := &StatsData{Groups: map[string]*StatsGroup{}}
-	statsData.CalcStats(filtered, groupBy, sum)
+	statsData.CalcStats(filtered, groupBy, sum, rangeTimes)
 
 	consoleHeight := goterm.Height()
 	rowNum := 0
@@ -651,11 +651,16 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	f.Writer.Flush()
 
 	f.println(f.fgGreen, "")
-	f.println(f.fgGreen, "  Arguments (Generally only for list or report commands):")
+	f.println(f.fgGreen, "  Arguments (Generally only for list, report or stats commands):")
 	f.printCols(colors, "    sort:[+|-][id|project|context|ord:[all|pro|ctx]|due|age|priority]", "Override sort for the todo list.")
 	f.printCols(colors, "    filter:[+|-][see filters above]", "Override filters for todo list.")
 	f.printCols(colors, "    group:[project | context]", "Group todos by project or context. Override group config for todo list.")
 	f.printCols(colors, "    notes:[true or false]", "List of todos will include the notes for todos that have them.")
+	f.printCols(colors, "    by:[a|p|c]", "(stats) Group stats by all, project or context.")
+	f.printCols(colors, "    sum:[a|d|w|m]", "(stats) Sum stats per all, per day, per week or per month.")
+	f.printCols(colors, "    cols:[p,a,m,c,ar]", "(stats) Display columns. Default is pending, added, modified, completed, archived.")
+	f.printCols(colors, "    range:[start date][:end date]", "(stats) Limit stats report to a date range. Prefix relative past date references with '-'.")
+	f.printCols(colors, "    chart:[true|false]", "(stats) Display a burndown chart.")
 	f.Writer.Flush()
 
 	f.println(f.fgGreen, "")
@@ -1181,21 +1186,25 @@ func (f *ScreenPrinter) PrintStatsHelp() {
 
 	f.println(f.fgGreen, "")
 	colors1 = []func(a ...interface{}) string{f.fgCyan, f.fgYellow}
-	f.printCols(colors1, "  Syntax: ", "todo [filters] stats [by:a|p|c] [sum:d|w|m] [cols:p,a,m,c,ar] [chart:true|false]")
+	f.printCols(colors1, "  Syntax: ", "todo [filters] stats [by:a|p|c] [sum:d|w|m] [cols:p,a,m,c,ar] [range:start date[:end date]] [chart:true|false]")
 	f.Writer.Flush()
 
 	f.println(f.fgGreen, "")
 	f.println(f.fgGreen, "Examples for reporting stats on todos:")
 	colors1 = []func(a ...interface{}) string{f.fgBlue, f.fgYellow}
 	colors2 := []func(a ...interface{}) string{f.fgMagenta, f.fgYellow}
-	f.printCols(colors1, "Print stats, group by all, sum by day, show shart.")
+	f.printCols(colors1, "Print stats, group by all, sum by day, show chart.")
 	f.printCols(colors2, "  Example:  ", "todo stats by:all sum:d chart:true")
-	f.printCols(colors1, "Print stats, group by project, sum by week, show shart.")
+	f.printCols(colors1, "Print stats, group by project, sum by week, show chart.")
 	f.printCols(colors2, "  Example:  ", "todo stats by:p sum:w chart:true")
-	f.printCols(colors1, "Print stats, group by context, sum by month, don't show shart.")
+	f.printCols(colors1, "Print stats, group by context, sum by month, don't show chart.")
 	f.printCols(colors2, "  Example:  ", "todo stats by:c sum:m")
-	f.printCols(colors1, "Print stats due last week, group by all, sum by day, show shart.")
+	f.printCols(colors1, "Print stats due last week, group by all, sum by day, show chart.")
 	f.printCols(colors2, "  Example:  ", "todo due:last_week stats by:a sum:d chart:true")
+	f.printCols(colors1, "Print stats for past 30 days, group by all, sum by day, show chart.")
+	f.printCols(colors2, "  Example:  ", "todo stats by:a sum:d range:-30d chart:true")
+	f.printCols(colors1, "Print stats for December, group by all, sum by day, show chart.")
+	f.printCols(colors2, "  Example:  ", "todo stats by:a sum:d range:2018-12-01:2018-12-31 chart:true")
 	f.Writer.Flush()
 }
 

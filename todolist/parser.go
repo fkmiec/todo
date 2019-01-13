@@ -161,7 +161,7 @@ func (p *Parser) ParseDateTime(input string, relativeTime time.Time) time.Time {
 
 	tmp := strings.ToLower(input)
 	//Check for relative date
-	r, _ := regexp.Compile(`(\d+)([dwmyh]{1})`)
+	r, _ := regexp.Compile(`(-?\d+)([dwmyh]{1})`)
 	if r.MatchString(tmp) {
 		matches := r.FindStringSubmatch(tmp)
 		unit := strings.ToLower(matches[2])
@@ -185,6 +185,12 @@ func (p *Parser) ParseDateTime(input string, relativeTime time.Time) time.Time {
 		return bod(targetDate)
 	}
 
+	//support look back a week as well as look forward
+	forward := true
+	if strings.HasPrefix(tmp, "-") {
+		forward = false
+		tmp = tmp[1:]
+	}
 	switch {
 	case strings.HasPrefix(tmp, "non"):
 		return bod(relativeTime)
@@ -195,19 +201,19 @@ func (p *Parser) ParseDateTime(input string, relativeTime time.Time) time.Time {
 	case strings.HasPrefix(tmp, "yes"):
 		return bod(relativeTime).AddDate(0, 0, -1)
 	case strings.HasPrefix(tmp, "mon"):
-		return p.monday(relativeTime)
+		return p.monday(relativeTime, forward)
 	case strings.HasPrefix(tmp, "tue"):
-		return p.tuesday(relativeTime)
+		return p.tuesday(relativeTime, forward)
 	case strings.HasPrefix(tmp, "wed"):
-		return p.wednesday(relativeTime)
+		return p.wednesday(relativeTime, forward)
 	case strings.HasPrefix(tmp, "thu"):
-		return p.thursday(relativeTime)
+		return p.thursday(relativeTime, forward)
 	case strings.HasPrefix(tmp, "fri"):
-		return p.friday(relativeTime)
+		return p.friday(relativeTime, forward)
 	case strings.HasPrefix(tmp, "sat"):
-		return p.saturday(relativeTime)
+		return p.saturday(relativeTime, forward)
 	case strings.HasPrefix(tmp, "sun"):
-		return p.sunday(relativeTime)
+		return p.sunday(relativeTime, forward)
 	case tmp == "last_week":
 		n := bod(relativeTime)
 		return getNearestMonday(n).AddDate(0, 0, -7)
@@ -237,44 +243,73 @@ func (p *Parser) parseArbitraryDate(_date string) time.Time {
 	return time.Now()
 }
 
-func (p *Parser) monday(day time.Time) time.Time {
-	mon := getNearestMonday(day)
-	return p.thisOrNextWeek(mon, day)
+func (p *Parser) monday(day time.Time, forward bool) time.Time {
+	dow := getNearestMonday(day)
+	if forward {
+		return p.thisOrNextWeek(dow, day)
+	}
+	return p.thisOrLastWeek(dow, day)
 }
 
-func (p *Parser) tuesday(day time.Time) time.Time {
-	tue := getNearestMonday(day).AddDate(0, 0, 1)
-	return p.thisOrNextWeek(tue, day)
+func (p *Parser) tuesday(day time.Time, forward bool) time.Time {
+	dow := getNearestMonday(day).AddDate(0, 0, 1)
+	if forward {
+		return p.thisOrNextWeek(dow, day)
+	}
+	return p.thisOrLastWeek(dow, day)
 }
 
-func (p *Parser) wednesday(day time.Time) time.Time {
-	tue := getNearestMonday(day).AddDate(0, 0, 2)
-	return p.thisOrNextWeek(tue, day)
+func (p *Parser) wednesday(day time.Time, forward bool) time.Time {
+	dow := getNearestMonday(day).AddDate(0, 0, 2)
+	if forward {
+		return p.thisOrNextWeek(dow, day)
+	}
+	return p.thisOrLastWeek(dow, day)
 }
 
-func (p *Parser) thursday(day time.Time) time.Time {
-	tue := getNearestMonday(day).AddDate(0, 0, 3)
-	return p.thisOrNextWeek(tue, day)
+func (p *Parser) thursday(day time.Time, forward bool) time.Time {
+	dow := getNearestMonday(day).AddDate(0, 0, 3)
+	if forward {
+		return p.thisOrNextWeek(dow, day)
+	}
+	return p.thisOrLastWeek(dow, day)
 }
 
-func (p *Parser) friday(day time.Time) time.Time {
-	tue := getNearestMonday(day).AddDate(0, 0, 4)
-	return p.thisOrNextWeek(tue, day)
+func (p *Parser) friday(day time.Time, forward bool) time.Time {
+	dow := getNearestMonday(day).AddDate(0, 0, 4)
+	if forward {
+		return p.thisOrNextWeek(dow, day)
+	}
+	return p.thisOrLastWeek(dow, day)
 }
 
-func (p *Parser) saturday(day time.Time) time.Time {
-	tue := getNearestMonday(day).AddDate(0, 0, 5)
-	return p.thisOrNextWeek(tue, day)
+func (p *Parser) saturday(day time.Time, forward bool) time.Time {
+	dow := getNearestMonday(day).AddDate(0, 0, 5)
+	if forward {
+		return p.thisOrNextWeek(dow, day)
+	}
+	return p.thisOrLastWeek(dow, day)
 }
 
-func (p *Parser) sunday(day time.Time) time.Time {
-	tue := getNearestMonday(day).AddDate(0, 0, 6)
-	return p.thisOrNextWeek(tue, day)
+func (p *Parser) sunday(day time.Time, forward bool) time.Time {
+	dow := getNearestMonday(day).AddDate(0, 0, 6)
+	if forward {
+		return p.thisOrNextWeek(dow, day)
+	}
+	return p.thisOrLastWeek(dow, day)
 }
 
 func (p *Parser) thisOrNextWeek(day time.Time, pivotDay time.Time) time.Time {
 	if day.Before(pivotDay) {
 		return bod(day.AddDate(0, 0, 7))
+	} else {
+		return bod(day)
+	}
+}
+
+func (p *Parser) thisOrLastWeek(day time.Time, pivotDay time.Time) time.Time {
+	if day.After(pivotDay) {
+		return bod(day.AddDate(0, 0, -7))
 	} else {
 		return bod(day)
 	}

@@ -104,7 +104,7 @@ func (s *StatsData) SortedGroup(group string) *StatsGroup {
 	return statsGroup
 }
 
-func (s *StatsData) CalcStats(todos []*Todo, groupBy string, sum int) {
+func (s *StatsData) CalcStats(todos []*Todo, groupBy string, sum int, rangeTimes []time.Time) {
 	doGroups := (groupBy != "" && !strings.HasPrefix(strings.ToLower(groupBy), "a"))
 	for _, todo := range todos {
 		if doGroups {
@@ -131,6 +131,30 @@ func (s *StatsData) CalcStats(todos []*Todo, groupBy string, sum int) {
 			stat.Pending -= stat.Unpending
 		}
 	}
+
+	if len(rangeTimes) > 0 {
+		startDate := rangeTimes[0]
+		var endDate time.Time
+		if len(rangeTimes) > 1 {
+			endDate = rangeTimes[1]
+		} else {
+			endDate = time.Now()
+		}
+
+		var rangeStats []*TodoStat
+		for _, sg := range groups {
+			for _, stat := range sg.Stats {
+				if stat.PeriodStartDate.Before(startDate) {
+					continue
+				}
+				if stat.PeriodStartDate.After(endDate) {
+					continue
+				}
+				rangeStats = append(rangeStats, stat)
+			}
+			sg.Stats = rangeStats
+		}
+	}
 }
 
 func (s *StatsData) CalcStatsForTodoAndGroup(todo *Todo, group string, sumBy int) {
@@ -145,7 +169,7 @@ func (s *StatsData) CalcStatsForTodoAndGroup(todo *Todo, group string, sumBy int
 	var stat *TodoStat
 	var pending = true
 	if sumBy == 1 { //weekly
-		startDateFunc := GetNearestSunday
+		startDateFunc := bow
 		stat = sg.getStatsForDate(startDateFunc(addDate))
 		stat.Added++
 		sg.getStatsForDate(startDateFunc(modDate)).Modified++
@@ -166,7 +190,7 @@ func (s *StatsData) CalcStatsForTodoAndGroup(todo *Todo, group string, sumBy int
 			}
 		}
 	} else if sumBy == 2 { //monthly
-		startDateFunc := GetFirstOfMonth
+		startDateFunc := bom
 		stat = sg.getStatsForDate(startDateFunc(addDate))
 		stat.Added++
 		sg.getStatsForDate(startDateFunc(modDate)).Modified++
@@ -187,7 +211,7 @@ func (s *StatsData) CalcStatsForTodoAndGroup(todo *Todo, group string, sumBy int
 			}
 		}
 	} else { //default to daily
-		startDateFunc := GetStartOfDay
+		startDateFunc := bod
 		stat = sg.getStatsForDate(startDateFunc(addDate))
 		stat.Added++
 		sg.getStatsForDate(startDateFunc(modDate)).Modified++

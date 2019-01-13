@@ -98,8 +98,8 @@ func (f *DateFilter) FilterAge(filters []string) ([]*Todo, []string) {
 	//If no max specified, match min age exactly
 	if max == -1 {
 		max = min
-	//If max specified with another value less than min (e.g. 1-0)
-	//return all todos older than min
+		//If max specified with another value less than min (e.g. 1-0)
+		//return all todos older than min
 	} else if max < min {
 		max = 999999999
 	}
@@ -109,7 +109,7 @@ func (f *DateFilter) FilterAge(filters []string) ([]*Todo, []string) {
 			todos = append(todos, todo)
 		}
 	}
-	
+
 	if index > -1 {
 		filters = append(filters[0:index], filters[index+1:]...)
 		return todos, filters
@@ -136,7 +136,8 @@ func (f *DateFilter) FilterDueDate(filters []string) ([]*Todo, []string) {
 	var todos []*Todo
 	index := -1
 
-	loop: for i, filter := range filters {
+loop:
+	for i, filter := range filters {
 		// filter due items
 		var d1 string
 		var d2 string
@@ -160,11 +161,11 @@ func (f *DateFilter) FilterDueDate(filters []string) ([]*Todo, []string) {
 			}
 
 			//Handle if there is a date range
-			if strings.HasPrefix(matches[2],":") {
+			if strings.HasPrefix(matches[2], ":") {
 				d2 = strings.ToLower(matches[3])
-				times = f.translateToDates(d1,d2)
+				times = translateToDates(f.Now, d1, d2)
 			} else {
-				times = f.translateToDates(d1)
+				times = translateToDates(f.Now, d1)
 			}
 			len := len(times)
 			switch len {
@@ -181,7 +182,7 @@ func (f *DateFilter) FilterDueDate(filters []string) ([]*Todo, []string) {
 			break
 		}
 	}
-	
+
 	if index > -1 {
 		filters = append(filters[0:index], filters[index+1:]...)
 	} else {
@@ -190,23 +191,24 @@ func (f *DateFilter) FilterDueDate(filters []string) ([]*Todo, []string) {
 	return todos, filters
 }
 
+/*
 func (f *DateFilter) translateToDates(vals ...string) []time.Time {
 	times := []time.Time{}
 	p := Parser{}
 	for i, val := range vals {
-		
+
 		//Interpret blank values to support filter for due after and due before
 		if val == "" {
 			if i == 0 {
 				//Treat blank begin date as an indefinite past date (-100 years)
-				times = append(times, bod(f.Now).AddDate(-100,0,0))
+				times = append(times, bod(f.Now).AddDate(-100, 0, 0))
 				continue
 			} else if i == 1 {
 				//Treat blank end date as an indefinite future date (+100 years)
-				times = append(times, bod(f.Now).AddDate(100,0,0))
+				times = append(times, bod(f.Now).AddDate(100, 0, 0))
 				continue
 			}
-		} 
+		}
 
 		switch {
 		case strings.HasPrefix(val, "this_week"):
@@ -229,10 +231,11 @@ func (f *DateFilter) translateToDates(vals ...string) []time.Time {
 			t := p.ParseDateTime(val, f.Now)
 			times = append(times, t)
 		}
-		
+
 	}
 	return times
 }
+*/
 
 func (f *DateFilter) filterAnyDueDate() []*Todo {
 	var ret []*Todo

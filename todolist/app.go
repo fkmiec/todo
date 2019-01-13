@@ -425,6 +425,7 @@ func (a *App) Stats(c *CommandImpl) {
 	var groupBy string
 	var sumBy string
 	var chart bool
+	var rangeTimes []time.Time
 	for _, m := range c.Mods {
 		if strings.HasPrefix(m, "cols:") {
 			cols = strings.Split(m[5:], ",")
@@ -434,6 +435,10 @@ func (a *App) Stats(c *CommandImpl) {
 			sumBy = m[4:]
 		} else if strings.HasPrefix(m, "chart:") {
 			chart = (m[6:] == "true")
+		} else if strings.HasPrefix(m, "range:") {
+			tmp := m[6:]
+			vals := strings.Split(tmp, ":")
+			rangeTimes = translateToDates(time.Now(), vals...)
 		}
 	}
 	filtered := NewToDoFilter(a.TodoList.Todos()).Filter(c.Filters)
@@ -441,7 +446,7 @@ func (a *App) Stats(c *CommandImpl) {
 		return
 	}
 	p := NewScreenPrinter()
-	p.PrintStats(filtered, groupBy, sumBy, cols, chart)
+	p.PrintStats(filtered, groupBy, sumBy, cols, chart, rangeTimes)
 }
 
 func (a *App) PrintTodoDetail(c *CommandImpl) {
