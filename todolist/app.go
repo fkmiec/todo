@@ -420,15 +420,13 @@ func (a *App) Stats(c *CommandImpl) {
 	*/
 
 	a.LoadPending()
-	var cols []string
+	a.LoadArchived()
+	cols := []string{"p", "a", "m", "c", "ar"}
 	var groupBy string
 	var sumBy string
 	var chart bool
 	for _, m := range c.Mods {
 		if strings.HasPrefix(m, "cols:") {
-			if strings.Contains(m, "ar") {
-				a.LoadArchived()
-			}
 			cols = strings.Split(m[5:], ",")
 		} else if strings.HasPrefix(m, "by:") {
 			groupBy = m[3:]
@@ -763,6 +761,8 @@ func (a *App) PrintHelp(c *CommandImpl) {
 				p.PrintConfigHelp()
 			case "open":
 				p.PrintOpenHelp()
+			case "stats":
+				p.PrintStatsHelp()
 			}
 		}
 	}

@@ -356,10 +356,6 @@ func (f *ScreenPrinter) formatCompleted(completed bool) string {
 	If no sum (or sum:all) then no grouping and row per pro/ctx
 */
 func (f *ScreenPrinter) PrintStats(filtered []*Todo, groupBy string, sumBy string, cols []string, chart bool) {
-
-	//sorter := NewTodoSorter("created")
-	//sorter.Sort(filtered)
-
 	var sum int
 	var sumString string
 	if strings.HasPrefix(strings.ToLower(sumBy), "w") {
@@ -373,12 +369,7 @@ func (f *ScreenPrinter) PrintStats(filtered []*Todo, groupBy string, sumBy strin
 		sumString = "Day"
 	}
 	statsData := &StatsData{Groups: map[string]*StatsGroup{}}
-
 	statsData.CalcStats(filtered, groupBy, sum)
-
-	if len(cols) < 1 {
-		cols = []string{"p", "a", "m", "c", "ar"}
-	}
 
 	consoleHeight := goterm.Height()
 	rowNum := 0
@@ -610,6 +601,7 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	f.printCols(colors, "  ac", "Archive all completed todos.")
 	f.printCols(colors, "  sync", "Synchronize todos with another file location. See .todorc file for sample config.")
 	f.printCols(colors, "  open", "Open a file or URL referenced in a todo note. The value 'notes' opens a todo-specific text file.")
+	f.printCols(colors, "  stats", "Print a statistical report of todos pending, added, completed, etc. Optionally show a chart.")
 	f.printCols(colors, "  an", "Add a note to one or more todos. Select todos by filter (see below).")
 	f.printCols(colors, "  en", "Edit a note for one or more todos. Select todos by filter (see below).")
 	f.printCols(colors, "  dn", "Delete a note for one or more todos. Select todos by filter (see below).")
@@ -1179,6 +1171,31 @@ func (f *ScreenPrinter) PrintUncompleteHelp() {
 	f.printCols(colors2, "  Example:  ", "todo 2 uncomplete")
 	f.printCols(colors1, "Uncomplete all todos for project BigProject.")
 	f.printCols(colors2, "  Example:  ", "todo +BigProject uc")
+	f.Writer.Flush()
+}
+
+func (f *ScreenPrinter) PrintStatsHelp() {
+	colors1 := []func(a ...interface{}) string{f.fgYellow}
+	f.printCols(colors1, "Report statistics on todos")
+	f.Writer.Flush()
+
+	f.println(f.fgGreen, "")
+	colors1 = []func(a ...interface{}) string{f.fgCyan, f.fgYellow}
+	f.printCols(colors1, "  Syntax: ", "todo [filters] stats [by:a|p|c] [sum:d|w|m] [cols:p,a,m,c,ar] [chart:true|false]")
+	f.Writer.Flush()
+
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for reporting stats on todos:")
+	colors1 = []func(a ...interface{}) string{f.fgBlue, f.fgYellow}
+	colors2 := []func(a ...interface{}) string{f.fgMagenta, f.fgYellow}
+	f.printCols(colors1, "Print stats, group by all, sum by day, show shart.")
+	f.printCols(colors2, "  Example:  ", "todo stats by:all sum:d chart:true")
+	f.printCols(colors1, "Print stats, group by project, sum by week, show shart.")
+	f.printCols(colors2, "  Example:  ", "todo stats by:p sum:w chart:true")
+	f.printCols(colors1, "Print stats, group by context, sum by month, don't show shart.")
+	f.printCols(colors2, "  Example:  ", "todo stats by:c sum:m")
+	f.printCols(colors1, "Print stats due last week, group by all, sum by day, show shart.")
+	f.printCols(colors2, "  Example:  ", "todo due:last_week stats by:a sum:d chart:true")
 	f.Writer.Flush()
 }
 
