@@ -22,6 +22,12 @@
 			"revisionTime": "2016-03-17T09:31:53Z"
 		},
 		{
+			"checksumSHA1": "GvsSfpAybAsUFvl0rwE/wHG6T5w=",
+			"path": "github.com/gizak/termui",
+			"revision": "b136f68f55f16f7c9ead1361d1b3530eecbe2ed3",
+			"revisionTime": "2018-12-28T21:07:47Z"
+		},
+		{
 			"checksumSHA1": "Farach1xcmsQYrhiUfkwF2rbIaE=",
 			"path": "github.com/julienschmidt/httprouter",
 			"revision": "6aacfd5ab513e34f7e64ea9627ab9670371b34e7",
@@ -40,6 +46,24 @@
 			"path": "github.com/mattn/go-isatty",
 			"revision": "533cd7fd8a85905f67a1753afb4deddc85ea174f",
 			"revisionTime": "2016-03-17T09:31:53Z"
+		},
+		{
+			"checksumSHA1": "qR7D38Zmn9TPUvGn64k+r0+Kq1c=",
+			"path": "github.com/mattn/go-runewidth",
+			"revision": "703b5e6b11ae25aeb2af9ebb5d5fdf8fa2575211",
+			"revisionTime": "2018-12-18T00:06:49Z"
+		},
+		{
+			"checksumSHA1": "2gW/SeTAbHsmAdoDes4DksvqTj4=",
+			"path": "github.com/mitchellh/go-wordwrap",
+			"revision": "9e67c67572bc5dd02aef930e2b0ae3c02a4b5a5c",
+			"revisionTime": "2018-08-28T14:53:44Z"
+		},
+		{
+			"checksumSHA1": "XckFuXipI7oFqN0CdaMzzr71OCA=",
+			"path": "github.com/nsf/termbox-go",
+			"revision": "0938b5187e61bb8c4dcac2b0a9cf4047d83784fc",
+			"revisionTime": "2019-01-04T13:35:58Z"
 		},
 		{
 			"checksumSHA1": "zKKp5SZ3d3ycKe4EKMNT0BqAWBw=",
@@ -79,5 +103,5 @@
 			"revisionTime": "2018-12-21T10:19:52Z"
 		}
 	],
-	"rootPath": "github.com/fkmiec/todolist"
+	"rootPath": "github.com/fkmiec/todo"
 }
