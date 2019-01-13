@@ -298,7 +298,6 @@ func (f *DateFilter) filterBetweenDatesInclusive(begin, end time.Time, filterOn 
 
 	for _, todo := range f.Todos {
 		todoTime := filterOn(todo) //time.ParseInLocation(time.RFC3339, filterOn(todo), f.Location)
-		println("todoTime: ", todoTime.Format(time.RFC3339))
 		if (begin.Before(todoTime) || begin.Equal(todoTime)) && (end.After(todoTime) || end.Equal(todoTime)) {
 			ret = append(ret, todo)
 		}
