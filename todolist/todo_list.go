@@ -3,7 +3,6 @@ package todolist
 import (
 	"sort"
 	"strings"
-	"time"
 )
 
 type TodoList struct {
@@ -20,7 +19,7 @@ func (t *TodoList) Load(todos []*Todo) {
 
 func (t *TodoList) Add(todo *Todo) int {
 	todo.Id = t.NextId()
-	todo.ModifiedDate = time.Now().Format(time.RFC3339)
+	todo.ModifiedDate = timeToString(Now)
 	todo.CreatedDate = todo.ModifiedDate
 	todo.IsModified = true
 	t.Data = append(t.Data, todo)
@@ -216,7 +215,7 @@ func (t *TodoList) UpdateOrdinals(set string, ids []int) {
 	//Assign new ordinal values
 	for i, todo := range res {
 		todo.Ordinals[set] = i
-		todo.ModifiedDate = time.Now().Format(time.RFC3339)
+		todo.ModifiedDate = timeToString(Now)
 		todo.IsModified = true
 	}
 }
@@ -226,7 +225,7 @@ func (t *TodoList) Edit(mods []string, todos ...*Todo) bool {
 	isEdited := false
 	for _, todo := range todos {
 		if parser.ParseEditTodo(todo, mods, t) {
-			todo.ModifiedDate = time.Now().Format(time.RFC3339)
+			todo.ModifiedDate = timeToString(Now)
 			todo.IsModified = true
 			t.remove(todo)
 			t.Data = append(t.Data, todo)
@@ -240,7 +239,7 @@ func (t *TodoList) Delete(todos ...*Todo) {
 	for _, td := range todos {
 		for _, todo := range t.Data {
 			if todo.Id == td.Id {
-				todo.ModifiedDate = time.Now().Format(time.RFC3339)
+				todo.ModifiedDate = timeToString(Now)
 				todo.IsModified = true
 				todo.Status = "Deleted"
 				t.remove(todo)
@@ -266,7 +265,7 @@ func (t *TodoList) remove(todos ...*Todo) {
 func (t *TodoList) Complete(todos ...*Todo) {
 	for _, td := range todos {
 		td.Complete()
-		td.ModifiedDate = time.Now().Format(time.RFC3339)
+		td.ModifiedDate = timeToString(Now)
 		td.IsModified = true
 		t.remove(td)
 		t.Data = append(t.Data, td)
@@ -276,7 +275,7 @@ func (t *TodoList) Complete(todos ...*Todo) {
 func (t *TodoList) Uncomplete(todos ...*Todo) {
 	for _, td := range todos {
 		td.Uncomplete()
-		td.ModifiedDate = time.Now().Format(time.RFC3339)
+		td.ModifiedDate = timeToString(Now)
 		td.IsModified = true
 		t.remove(td)
 		t.Data = append(t.Data, td)
@@ -286,7 +285,7 @@ func (t *TodoList) Uncomplete(todos ...*Todo) {
 func (t *TodoList) Archive(todos ...*Todo) {
 	for _, td := range todos {
 		td.Archive()
-		td.ModifiedDate = time.Now().Format(time.RFC3339)
+		td.ModifiedDate = timeToString(Now)
 		td.IsModified = true
 		t.remove(td)
 		t.Data = append(t.Data, td)
@@ -296,7 +295,7 @@ func (t *TodoList) Archive(todos ...*Todo) {
 func (t *TodoList) Unarchive(todos ...*Todo) {
 	for _, td := range todos {
 		td.Unarchive()
-		td.ModifiedDate = time.Now().Format(time.RFC3339)
+		td.ModifiedDate = timeToString(Now)
 		td.IsModified = true
 		t.remove(td)
 		t.Data = append(t.Data, td)
@@ -317,8 +316,8 @@ type ByDate []*Todo
 func (a ByDate) Len() int      { return len(a) }
 func (a ByDate) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByDate) Less(i, j int) bool {
-	t1Due := a[i].ToTime(a[i].Due) //CalculateDueTime()
-	t2Due := a[j].ToTime(a[j].Due) //CalculateDueTime()
+	t1Due := stringToTime(a[i].Due) //CalculateDueTime()
+	t2Due := stringToTime(a[j].Due) //CalculateDueTime()
 	return t1Due.Before(t2Due)
 }
 

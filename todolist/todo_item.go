@@ -1,11 +1,8 @@
 package todolist
 
 import (
-	"crypto/rand"
 	"fmt"
-	"io"
 	"os"
-	"time"
 )
 
 // Timestamp format to include date, time with timezone support. Easy to parse
@@ -48,7 +45,7 @@ func (t Todo) Valid() bool {
 
 func (t *Todo) Complete() {
 	t.Completed = true
-	t.CompletedDate = timestamp(time.Now()).Format(time.RFC3339)
+	t.CompletedDate = timeToString(Now)
 }
 
 func (t *Todo) Uncomplete() {
@@ -63,40 +60,6 @@ func (t *Todo) Archive() {
 func (t *Todo) Unarchive() {
 	t.Status = "Pending"
 	t.Until = ""
-}
-
-func (t Todo) ToTime(val string) time.Time {
-	if val != "" {
-		parsedTime, _ := time.Parse(time.RFC3339, val)
-		return parsedTime
-	} else {
-		parsedTime, _ := time.Parse(time.RFC3339, "1900-01-01T00:00:00+00:00")
-		return parsedTime
-	}
-}
-
-func (t Todo) ToSimpleDate(val time.Time) string {
-	formatted := val.Format("2006-01-02")
-	return formatted
-}
-
-func (t Todo) ToDateTimeString(val time.Time) string {
-	formatted := val.Format(time.RFC3339)
-	return formatted
-}
-
-// newUUID generates a random UUID according to RFC 4122
-func newUUID() (string, error) {
-	uuid := make([]byte, 16)
-	n, err := io.ReadFull(rand.Reader, uuid)
-	if n != len(uuid) || err != nil {
-		return "", err
-	}
-	// variant bits; see section 4.1.1
-	uuid[8] = uuid[8]&^0xc0 | 0x80
-	// version 4 (pseudo-random); see section 4.1.3
-	uuid[6] = uuid[6]&^0xf0 | 0x40
-	return fmt.Sprintf("%x-%x-%x-%x-%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:]), nil
 }
 
 func (t Todo) HasProject(proj string) bool {

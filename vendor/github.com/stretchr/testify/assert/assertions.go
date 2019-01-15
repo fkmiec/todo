@@ -668,7 +668,7 @@ func NotPanics(t TestingT, f PanicTestFunc, msgAndArgs ...interface{}) bool {
 
 // WithinDuration asserts that the two times are within duration delta of each other.
 //
-//   assert.WithinDuration(t, time.Now(), time.Now(), 10*time.Second, "The difference should not be more than 10s")
+//   assert.WithinDuration(t, Now, Now, 10*time.Second, "The difference should not be more than 10s")
 //
 // Returns whether the assertion was successful (true) or not (false).
 func WithinDuration(t TestingT, expected, actual time.Time, delta time.Duration, msgAndArgs ...interface{}) bool {

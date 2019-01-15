@@ -12,6 +12,10 @@ import (
 	"github.com/skratchdot/open-golang/open"
 )
 
+//Current time reference used in execution of any single todo invocation
+//for parsing, date filtering, sorting, etc.
+var Now time.Time
+
 type App struct {
 	TodoStore  Store
 	Cfg        *Config
@@ -29,7 +33,7 @@ func NewApp() *App {
 	}
 	app.loadConfig()
 	app.mapCommands()
-
+	Now = time.Now()
 	return app
 }
 
@@ -288,7 +292,7 @@ func (a *App) AddNote(c *CommandImpl) {
 	parser := &Parser{}
 
 	if parser.ParseAddNote(todo, c.Mods) {
-		todo.ModifiedDate = time.Now().Format(time.RFC3339)
+		todo.ModifiedDate = timeToString(Now)
 		todo.IsModified = true
 		fmt.Println("Note added.")
 	}
@@ -309,7 +313,7 @@ func (a *App) EditNote(c *CommandImpl) {
 	parser := &Parser{}
 
 	if parser.ParseEditNote(todo, c.Mods) {
-		todo.ModifiedDate = time.Now().Format(time.RFC3339)
+		todo.ModifiedDate = timeToString(Now)
 		todo.IsModified = true
 		fmt.Println("Note edited.")
 	}
@@ -330,7 +334,7 @@ func (a *App) DeleteNote(c *CommandImpl) {
 	parser := &Parser{}
 
 	if parser.ParseDeleteNote(todo, c.Mods) {
-		todo.ModifiedDate = time.Now().Format(time.RFC3339)
+		todo.ModifiedDate = timeToString(Now)
 		todo.IsModified = true
 		fmt.Println("Note deleted.")
 	}
@@ -438,7 +442,7 @@ func (a *App) Stats(c *CommandImpl) {
 		} else if strings.HasPrefix(m, "range:") {
 			tmp := m[6:]
 			vals := strings.Split(tmp, ":")
-			rangeTimes = translateToDates(time.Now(), vals...)
+			rangeTimes = translateToDates(Now, vals...)
 		}
 	}
 	filtered := NewToDoFilter(a.TodoList.Todos()).Filter(c.Filters)
@@ -720,6 +724,14 @@ func (a *App) PrintHelp(c *CommandImpl) {
 	} else {
 		for _, arg := range c.Args {
 			switch arg {
+			case "dates":
+				p.PrintDatesHelp()
+			case "filters":
+				p.PrintFiltersHelp()
+			case "modifiers", "mods":
+				p.PrintModifiersHelp()
+			case "arguments", "args":
+				p.PrintArgsHelp()
 			case "add", "a":
 				p.PrintAddHelp()
 			case "list", "l":

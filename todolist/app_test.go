@@ -12,7 +12,7 @@ import (
 func TestAddTodo(t *testing.T) {
 	assert := assert.New(t)
 	app := &App{TodoList: &TodoList{}, TodoStore: &MemoryStore{}}
-	year := strconv.Itoa(time.Now().Year())
+	year := strconv.Itoa(Now.Year())
 
 	app.AddTodo("a do some stuff due may 23")
 
@@ -46,7 +46,7 @@ func TestAddDoneTodo(t *testing.T) {
 func TestAddTodoWithEuropeanDates(t *testing.T) {
 	assert := assert.New(t)
 	app := &App{TodoList: &TodoList{}, TodoStore: &MemoryStore{}}
-	year := strconv.Itoa(time.Now().Year())
+	year := strconv.Itoa(Now.Year())
 
 	app.AddTodo("a do some stuff due 23 may")
 

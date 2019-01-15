@@ -373,7 +373,7 @@ func (a *Assertions) True(value bool, msgAndArgs ...interface{}) bool {
 
 // WithinDuration asserts that the two times are within duration delta of each other.
 // 
-//   a.WithinDuration(time.Now(), time.Now(), 10*time.Second, "The difference should not be more than 10s")
+//   a.WithinDuration(Now, Now, 10*time.Second, "The difference should not be more than 10s")
 // 
 // Returns whether the assertion was successful (true) or not (false).
 func (a *Assertions) WithinDuration(expected time.Time, actual time.Time, delta time.Duration, msgAndArgs ...interface{}) bool {

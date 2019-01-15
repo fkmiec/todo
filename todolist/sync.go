@@ -15,7 +15,6 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
-	"time"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -91,8 +90,8 @@ func (s *TodoSync) Sync(verbose bool) error {
 	s.Backlog.Load(todos)
 	if len(s.Backlog.Data) > 0 {
 		if s.Backlog.Data[0].Status == "Checkpoint" {
-		s.Checkpoint = s.Backlog.Data[0]
-		backlogCount = len(todos) - 1
+			s.Checkpoint = s.Backlog.Data[0]
+			backlogCount = len(todos) - 1
 		} else {
 			s.Checkpoint = NewTodo()
 			s.Checkpoint.Status = "Checkpoint"
@@ -117,7 +116,7 @@ func (s *TodoSync) Sync(verbose bool) error {
 	//Set new checkpoint to be used in backlog and remote backlog
 	newCheckpoint := NewTodo()
 	newCheckpoint.Status = "Checkpoint"
-	newCheckpoint.ModifiedDate = time.Now().Format(time.RFC3339)
+	newCheckpoint.ModifiedDate = timeToString(Now)
 	newCheckpoint.IsModified = true
 
 	if len(s.Backlog.Data) > 0 && s.Backlog.Data[0].Status == "Checkpoint" {
@@ -283,8 +282,8 @@ func (s *TodoSync) syncRemoteChanges() {
 
 func (s *TodoSync) diffTodos(local *Todo, remote *Todo) *Todo {
 
-	localTime := s.getModifiedTime(local)
-	remoteTime := s.getModifiedTime(remote)
+	localTime := getModifiedTime(local)
+	remoteTime := getModifiedTime(remote)
 
 	if remoteTime.After(localTime) {
 		local.Subject = remote.Subject
@@ -300,16 +299,16 @@ func (s *TodoSync) diffTodos(local *Todo, remote *Todo) *Todo {
 		//Determine if adding or removing projects from local
 		//and invoke todolist.AddProject or todolist.RemoveProject, which
 		//will ensure the ordinals are updated.
-		toRemove := s.inSliceOneNotSliceTwo(local.Projects, remote.Projects)
-		toAdd := s.inSliceOneNotSliceTwo(remote.Projects, local.Projects)
+		toRemove := inSliceOneNotSliceTwo(local.Projects, remote.Projects)
+		toAdd := inSliceOneNotSliceTwo(remote.Projects, local.Projects)
 		for _, p := range toRemove {
 			s.Local.RemoveProject(p, local)
 		}
 		for _, p := range toAdd {
 			s.Local.AddProject(p, local)
 		}
-		toRemove = s.inSliceOneNotSliceTwo(local.Contexts, remote.Contexts)
-		toAdd = s.inSliceOneNotSliceTwo(remote.Contexts, local.Contexts)
+		toRemove = inSliceOneNotSliceTwo(local.Contexts, remote.Contexts)
+		toAdd = inSliceOneNotSliceTwo(remote.Contexts, local.Contexts)
 		for _, c := range toRemove {
 			s.Local.RemoveContext(c, local)
 		}
@@ -324,44 +323,6 @@ func (s *TodoSync) diffTodos(local *Todo, remote *Todo) *Todo {
 	//on all elements. Not likely to be true, but simple and reasonbly easy rule
 	//to follow that should do the right thing most of the time.
 	return local
-}
-
-func (s *TodoSync) inSliceOneNotSliceTwo(s1, s2 []string) []string {
-	// difference returns the elements in s1 that aren't in s2
-	ms2 := map[string]bool{} //map of slice 2 elements
-	for _, x := range s2 {
-		ms2[x] = true
-	}
-	res := []string{} //result slice to contain s1 elements not in s2
-	for _, x := range s1 {
-		if _, ok := ms2[x]; !ok {
-			res = append(res, x)
-		}
-	}
-	return res
-}
-
-func (s *TodoSync) getModifiedTime(todo *Todo) time.Time {
-	if len(todo.ModifiedDate) > 0 {
-		modTime, rerr := time.Parse(time.RFC3339, todo.ModifiedDate)
-		if rerr != nil {
-			createTime, _ := time.Parse(time.RFC3339, todo.CreatedDate)
-			return createTime
-		}
-		return modTime
-	}
-	return time.Now()
-}
-
-func (s *TodoSync) getStatus(todo *Todo) int {
-	if todo.Status == "Pending" {
-		return 0
-	} else if todo.Status == "Archived" {
-		return 1
-	} else if todo.Status == "Deleted" {
-		return 2
-	}
-	return 0
 }
 
 /**
@@ -449,15 +410,3 @@ func passphraseInput() string {
 	fmt.Println("")
 	return strings.TrimSpace(password)
 }
-
-/*
-func main() {
-	fmt.Println("Starting the application...")
-	ciphertext := encrypt([]byte("Hello World"), "password")
-	fmt.Printf("Encrypted: %x\n", ciphertext)
-	plaintext := decrypt(ciphertext, "password")
-	fmt.Printf("Decrypted: %s\n", plaintext)
-	encryptFile("sample.txt", []byte("Hello World"), "password1")
-	fmt.Println(string(decryptFile("sample.txt", "password1")))
-}
-*/

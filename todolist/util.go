@@ -1,6 +1,9 @@
 package todolist
 
 import (
+	"crypto/rand"
+	"fmt"
+	"io"
 	"strings"
 	"time"
 )
@@ -39,13 +42,6 @@ func bod(t time.Time) time.Time {
 	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
 }
 
-func timestamp(t time.Time) time.Time {
-	year, month, day := t.Date()
-	hour, min, sec := t.Clock()
-
-	return time.Date(year, month, day, hour, min, sec, 0, t.Location())
-}
-
 func bom(t time.Time) time.Time {
 	for {
 		if t.Day() != 1 {
@@ -66,13 +62,95 @@ func bow(t time.Time) time.Time {
 	}
 }
 
-func getNearestMonday(t time.Time) time.Time {
+func mostRecentSunday(t time.Time) time.Time {
+	for {
+		if t.Weekday() != time.Sunday {
+			t = t.AddDate(0, 0, -1)
+		} else {
+			return t
+		}
+	}
+}
+
+func mostRecentMonday(t time.Time) time.Time {
 	for {
 		if t.Weekday() != time.Monday {
 			t = t.AddDate(0, 0, -1)
 		} else {
 			return t
 		}
+	}
+}
+
+func monday(day time.Time, forward bool) time.Time {
+	dow := mostRecentMonday(day)
+	if forward {
+		return thisOrNextWeek(dow, day)
+	}
+	return thisOrLastWeek(dow, day)
+}
+
+func tuesday(day time.Time, forward bool) time.Time {
+	dow := mostRecentMonday(day).AddDate(0, 0, 1)
+	if forward {
+		return thisOrNextWeek(dow, day)
+	}
+	return thisOrLastWeek(dow, day)
+}
+
+func wednesday(day time.Time, forward bool) time.Time {
+	dow := mostRecentMonday(day).AddDate(0, 0, 2)
+	if forward {
+		return thisOrNextWeek(dow, day)
+	}
+	return thisOrLastWeek(dow, day)
+}
+
+func thursday(day time.Time, forward bool) time.Time {
+	dow := mostRecentMonday(day).AddDate(0, 0, 3)
+	if forward {
+		return thisOrNextWeek(dow, day)
+	}
+	return thisOrLastWeek(dow, day)
+}
+
+func friday(day time.Time, forward bool) time.Time {
+	dow := mostRecentMonday(day).AddDate(0, 0, 4)
+	if forward {
+		return thisOrNextWeek(dow, day)
+	}
+	return thisOrLastWeek(dow, day)
+}
+
+func saturday(day time.Time, forward bool) time.Time {
+	dow := mostRecentMonday(day).AddDate(0, 0, 5)
+	if forward {
+		return thisOrNextWeek(dow, day)
+	}
+	return thisOrLastWeek(dow, day)
+}
+
+func sunday(day time.Time, forward bool) time.Time {
+	dow := mostRecentMonday(day).AddDate(0, 0, 6)
+	if forward {
+		return thisOrNextWeek(dow, day)
+	}
+	return thisOrLastWeek(dow, day)
+}
+
+func thisOrNextWeek(day time.Time, pivotDay time.Time) time.Time {
+	if day.Before(pivotDay) {
+		return bod(day.AddDate(0, 0, 7))
+	} else {
+		return bod(day)
+	}
+}
+
+func thisOrLastWeek(day time.Time, pivotDay time.Time) time.Time {
+	if day.After(pivotDay) {
+		return bod(day.AddDate(0, 0, -7))
+	} else {
+		return bod(day)
 	}
 }
 
@@ -84,7 +162,7 @@ func pluralize(count int, singular, plural string) string {
 }
 
 func isToday(t time.Time) bool {
-	nowYear, nowMonth, nowDay := time.Now().Date()
+	nowYear, nowMonth, nowDay := Now.Date()
 	timeYear, timeMonth, timeDay := t.Date()
 	return nowYear == timeYear &&
 		nowMonth == timeMonth &&
@@ -92,7 +170,7 @@ func isToday(t time.Time) bool {
 }
 
 func isTomorrow(t time.Time) bool {
-	nowYear, nowMonth, nowDay := time.Now().AddDate(0, 0, 1).Date()
+	nowYear, nowMonth, nowDay := Now.AddDate(0, 0, 1).Date()
 	timeYear, timeMonth, timeDay := t.Date()
 	return nowYear == timeYear &&
 		nowMonth == timeMonth &&
@@ -100,7 +178,7 @@ func isTomorrow(t time.Time) bool {
 }
 
 func isPastDue(t time.Time) bool {
-	return time.Now().After(t)
+	return Now.After(t)
 }
 
 func translateToDates(t time.Time, vals ...string) []time.Time {
@@ -145,4 +223,60 @@ func translateToDates(t time.Time, vals ...string) []time.Time {
 
 	}
 	return times
+}
+
+func inSliceOneNotSliceTwo(s1, s2 []string) []string {
+	// difference returns the elements in s1 that aren't in s2
+	ms2 := map[string]bool{} //map of slice 2 elements
+	for _, x := range s2 {
+		ms2[x] = true
+	}
+	res := []string{} //result slice to contain s1 elements not in s2
+	for _, x := range s1 {
+		if _, ok := ms2[x]; !ok {
+			res = append(res, x)
+		}
+	}
+	return res
+}
+
+func getModifiedTime(todo *Todo) time.Time {
+	if len(todo.ModifiedDate) > 0 {
+		modTime, rerr := time.Parse(time.RFC3339, todo.ModifiedDate)
+		if rerr != nil {
+			createTime, _ := time.Parse(time.RFC3339, todo.CreatedDate)
+			return createTime
+		}
+		return modTime
+	}
+	return Now
+}
+
+func stringToTime(val string) time.Time {
+	if val != "" {
+		parsedTime, _ := time.Parse(time.RFC3339, val)
+		return parsedTime
+	} else {
+		parsedTime, _ := time.Parse(time.RFC3339, "1900-01-01T00:00:00+00:00")
+		return parsedTime
+	}
+}
+
+func timeToString(val time.Time) string {
+	formatted := val.Format(time.RFC3339)
+	return formatted
+}
+
+// newUUID generates a random UUID according to RFC 4122
+func newUUID() (string, error) {
+	uuid := make([]byte, 16)
+	n, err := io.ReadFull(rand.Reader, uuid)
+	if n != len(uuid) || err != nil {
+		return "", err
+	}
+	// variant bits; see section 4.1.1
+	uuid[8] = uuid[8]&^0xc0 | 0x80
+	// version 4 (pseudo-random); see section 4.1.3
+	uuid[6] = uuid[6]&^0xf0 | 0x40
+	return fmt.Sprintf("%x-%x-%x-%x-%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:]), nil
 }

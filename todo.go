@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
 	"github.com/fkmiec/todo/todolist"
 )
 

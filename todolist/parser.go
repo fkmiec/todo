@@ -43,13 +43,13 @@ func (p *Parser) ParseInput(mods []string, todo *Todo, todolist *TodoList) {
 			}
 		} else if strings.HasPrefix(part, "due:") {
 			tmp := part[4:]
-			todo.Due = p.FormatDateTime(tmp, time.Now())
+			todo.Due = p.FormatDateTime(tmp, Now)
 		} else if strings.HasPrefix(part, "wait:") {
 			tmp := part[5:]
-			todo.Wait = p.FormatDateTime(tmp, time.Now())
+			todo.Wait = p.FormatDateTime(tmp, Now)
 		} else if strings.HasPrefix(part, "until:") {
 			tmp := part[6:]
-			todo.Until = p.FormatDateTime(tmp, time.Now())
+			todo.Until = p.FormatDateTime(tmp, Now)
 		} else if strings.HasPrefix(part, "pri:") {
 			tmp := part[4:]
 			todo.Priority = tmp
@@ -154,7 +154,7 @@ func (p *Parser) getNoteID(input string) (int, error) {
 }
 
 func (p *Parser) FormatDateTime(input string, relativeTime time.Time) string {
-	return p.ParseDateTime(input, relativeTime).Format(time.RFC3339)
+	return timeToString(p.ParseDateTime(input, relativeTime))
 }
 
 func (p *Parser) ParseDateTime(input string, relativeTime time.Time) time.Time {
@@ -170,7 +170,7 @@ func (p *Parser) ParseDateTime(input string, relativeTime time.Time) time.Time {
 			fmt.Println("Could not parse date: ", input, ":", err)
 			os.Exit(1)
 		}
-		targetDate := time.Now()
+		targetDate := Now
 		if unit == "d" {
 			targetDate = targetDate.AddDate(0, 0, 1*cnt)
 		} else if unit == "w" {
@@ -201,28 +201,28 @@ func (p *Parser) ParseDateTime(input string, relativeTime time.Time) time.Time {
 	case strings.HasPrefix(tmp, "yes"):
 		return bod(relativeTime).AddDate(0, 0, -1)
 	case strings.HasPrefix(tmp, "mon"):
-		return p.monday(relativeTime, forward)
+		return monday(relativeTime, forward)
 	case strings.HasPrefix(tmp, "tue"):
-		return p.tuesday(relativeTime, forward)
+		return tuesday(relativeTime, forward)
 	case strings.HasPrefix(tmp, "wed"):
-		return p.wednesday(relativeTime, forward)
+		return wednesday(relativeTime, forward)
 	case strings.HasPrefix(tmp, "thu"):
-		return p.thursday(relativeTime, forward)
+		return thursday(relativeTime, forward)
 	case strings.HasPrefix(tmp, "fri"):
-		return p.friday(relativeTime, forward)
+		return friday(relativeTime, forward)
 	case strings.HasPrefix(tmp, "sat"):
-		return p.saturday(relativeTime, forward)
+		return saturday(relativeTime, forward)
 	case strings.HasPrefix(tmp, "sun"):
-		return p.sunday(relativeTime, forward)
+		return sunday(relativeTime, forward)
 	case tmp == "last_week":
 		n := bod(relativeTime)
-		return getNearestMonday(n).AddDate(0, 0, -7)
+		return mostRecentMonday(n).AddDate(0, 0, -7)
 	case tmp == "this_week":
 		n := bod(relativeTime)
-		return getNearestMonday(n)
+		return mostRecentMonday(n)
 	case tmp == "next_week":
 		n := bod(relativeTime)
-		return getNearestMonday(n).AddDate(0, 0, 7)
+		return mostRecentMonday(n).AddDate(0, 0, 7)
 	}
 	return p.parseArbitraryDate(tmp)
 }
@@ -240,81 +240,10 @@ func (p *Parser) parseArbitraryDate(_date string) time.Time {
 	fmt.Printf("Could not parse the date you gave me: %s\n", _date)
 	fmt.Println("I'm expecting a date like \"yyyy-MM-dd\" or \"yyyyMMdd\".")
 	os.Exit(-1)
-	return time.Now()
+	return Now
 }
 
-func (p *Parser) monday(day time.Time, forward bool) time.Time {
-	dow := getNearestMonday(day)
-	if forward {
-		return p.thisOrNextWeek(dow, day)
-	}
-	return p.thisOrLastWeek(dow, day)
-}
-
-func (p *Parser) tuesday(day time.Time, forward bool) time.Time {
-	dow := getNearestMonday(day).AddDate(0, 0, 1)
-	if forward {
-		return p.thisOrNextWeek(dow, day)
-	}
-	return p.thisOrLastWeek(dow, day)
-}
-
-func (p *Parser) wednesday(day time.Time, forward bool) time.Time {
-	dow := getNearestMonday(day).AddDate(0, 0, 2)
-	if forward {
-		return p.thisOrNextWeek(dow, day)
-	}
-	return p.thisOrLastWeek(dow, day)
-}
-
-func (p *Parser) thursday(day time.Time, forward bool) time.Time {
-	dow := getNearestMonday(day).AddDate(0, 0, 3)
-	if forward {
-		return p.thisOrNextWeek(dow, day)
-	}
-	return p.thisOrLastWeek(dow, day)
-}
-
-func (p *Parser) friday(day time.Time, forward bool) time.Time {
-	dow := getNearestMonday(day).AddDate(0, 0, 4)
-	if forward {
-		return p.thisOrNextWeek(dow, day)
-	}
-	return p.thisOrLastWeek(dow, day)
-}
-
-func (p *Parser) saturday(day time.Time, forward bool) time.Time {
-	dow := getNearestMonday(day).AddDate(0, 0, 5)
-	if forward {
-		return p.thisOrNextWeek(dow, day)
-	}
-	return p.thisOrLastWeek(dow, day)
-}
-
-func (p *Parser) sunday(day time.Time, forward bool) time.Time {
-	dow := getNearestMonday(day).AddDate(0, 0, 6)
-	if forward {
-		return p.thisOrNextWeek(dow, day)
-	}
-	return p.thisOrLastWeek(dow, day)
-}
-
-func (p *Parser) thisOrNextWeek(day time.Time, pivotDay time.Time) time.Time {
-	if day.Before(pivotDay) {
-		return bod(day.AddDate(0, 0, 7))
-	} else {
-		return bod(day)
-	}
-}
-
-func (p *Parser) thisOrLastWeek(day time.Time, pivotDay time.Time) time.Time {
-	if day.After(pivotDay) {
-		return bod(day.AddDate(0, 0, -7))
-	} else {
-		return bod(day)
-	}
-}
-
+/*
 func (p *Parser) matchWords(input string, r *regexp.Regexp) []string {
 	results := r.FindAllString(input, -1)
 	ret := []string{}
@@ -324,3 +253,4 @@ func (p *Parser) matchWords(input string, r *regexp.Regexp) []string {
 	}
 	return ret
 }
+*/

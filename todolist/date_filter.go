@@ -14,16 +14,16 @@ type DateFilter struct {
 }
 
 func NewDateFilter(todos []*Todo) *DateFilter {
-	now := time.Now()
+	now := Now
 	return &DateFilter{Todos: todos, Now: now}
 }
 
 func filterOnDue(todo *Todo) time.Time {
-	return todo.ToTime(todo.Due)
+	return stringToTime(todo.Due)
 }
 
 func filterOnCompletedDate(todo *Todo) time.Time {
-	return todo.ToTime(todo.CompletedDate)
+	return stringToTime(todo.CompletedDate)
 }
 
 func (f *DateFilter) FilterExpired() []*Todo {
@@ -31,7 +31,7 @@ func (f *DateFilter) FilterExpired() []*Todo {
 	var ret []*Todo
 	for _, todo := range f.Todos {
 		if todo.Until != "" {
-			todoTime := todo.ToTime(todo.Until) // time.ParseInLocation(time.RFC3339, todo.Due, f.Location)
+			todoTime := stringToTime(todo.Until) // time.ParseInLocation(time.RFC3339, todo.Due, f.Location)
 			if todoTime.Before(f.Now) {
 				ret = append(ret, todo)
 			}
@@ -60,7 +60,7 @@ func (f *DateFilter) FilterWaiting(filters []string) ([]*Todo, []string) {
 func (f *DateFilter) FilterExcludeWaiting() []*Todo {
 	var ret []*Todo
 	for _, todo := range f.Todos {
-		if !todo.ToTime(todo.Wait).After(f.Now) {
+		if !stringToTime(todo.Wait).After(f.Now) {
 			ret = append(ret, todo)
 		}
 	}
@@ -70,7 +70,7 @@ func (f *DateFilter) FilterExcludeWaiting() []*Todo {
 func (f *DateFilter) FilterIncludeWaiting() []*Todo {
 	var ret []*Todo
 	for _, todo := range f.Todos {
-		if todo.ToTime(todo.Wait).After(f.Now) {
+		if stringToTime(todo.Wait).After(f.Now) {
 			ret = append(ret, todo)
 		}
 	}
@@ -123,7 +123,7 @@ func (f *DateFilter) ageInDays(todo *Todo) int {
 		tmpTime, err := time.Parse(time.RFC3339, todo.CreatedDate)
 		if err == nil {
 			createTime := tmpTime.Unix()
-			now := time.Now().Unix()
+			now := Now.Unix()
 			diff := now - createTime
 			days = (int)(diff / (60 * 60 * 24))
 		}
@@ -191,52 +191,6 @@ loop:
 	return todos, filters
 }
 
-/*
-func (f *DateFilter) translateToDates(vals ...string) []time.Time {
-	times := []time.Time{}
-	p := Parser{}
-	for i, val := range vals {
-
-		//Interpret blank values to support filter for due after and due before
-		if val == "" {
-			if i == 0 {
-				//Treat blank begin date as an indefinite past date (-100 years)
-				times = append(times, bod(f.Now).AddDate(-100, 0, 0))
-				continue
-			} else if i == 1 {
-				//Treat blank end date as an indefinite future date (+100 years)
-				times = append(times, bod(f.Now).AddDate(100, 0, 0))
-				continue
-			}
-		}
-
-		switch {
-		case strings.HasPrefix(val, "this_week"):
-			begin := bod(f.FindSunday(f.Now))
-			end := begin.AddDate(0, 0, 7)
-			times = append(times, begin, end)
-			break
-		case strings.HasPrefix(val, "next_week"):
-			begin := f.FindSunday(f.Now).AddDate(0, 0, 7)
-			end := begin.AddDate(0, 0, 7)
-			times = append(times, begin, end)
-			break
-		case strings.HasPrefix(val, "last_week"):
-			begin := f.FindSunday(f.Now).AddDate(0, 0, -7)
-			end := begin.AddDate(0, 0, 7)
-			times = append(times, begin, end)
-			break
-		default:
-			//If not blank or one of the range terms, parse for day of week or relative references
-			t := p.ParseDateTime(val, f.Now)
-			times = append(times, t)
-		}
-
-	}
-	return times
-}
-*/
-
 func (f *DateFilter) filterAnyDueDate() []*Todo {
 	var ret []*Todo
 	for _, todo := range f.Todos {
@@ -255,26 +209,6 @@ func (f *DateFilter) filterNoDueDate() []*Todo {
 		}
 	}
 	return ret
-}
-
-func (f *DateFilter) FindSunday(pivot time.Time) time.Time {
-	switch pivot.Weekday() {
-	case time.Sunday:
-		return pivot
-	case time.Monday:
-		return pivot.AddDate(0, 0, -1)
-	case time.Tuesday:
-		return pivot.AddDate(0, 0, -2)
-	case time.Wednesday:
-		return pivot.AddDate(0, 0, -3)
-	case time.Thursday:
-		return pivot.AddDate(0, 0, -4)
-	case time.Friday:
-		return pivot.AddDate(0, 0, -5)
-	case time.Saturday:
-		return pivot.AddDate(0, 0, -6)
-	}
-	return pivot
 }
 
 func (f *DateFilter) equalSimpleDates(t1 time.Time, t2 time.Time) bool {
@@ -297,8 +231,7 @@ func (f *DateFilter) filterBetweenDatesInclusive(begin, end time.Time, filterOn 
 	var ret []*Todo
 
 	for _, todo := range f.Todos {
-		todoTime := filterOn(todo) //time.ParseInLocation(time.RFC3339, filterOn(todo), f.Location)
-		println("todoTime: ", todoTime.Format(time.RFC3339))
+		todoTime := filterOn(todo)
 		if (begin.Before(todoTime) || begin.Equal(todoTime)) && (end.After(todoTime) || end.Equal(todoTime)) {
 			ret = append(ret, todo)
 		}
@@ -312,7 +245,7 @@ func (f *DateFilter) filterCompletedToday(pivot time.Time) []*Todo {
 
 func (f *DateFilter) filterCompletedThisWeek(pivot time.Time) []*Todo {
 
-	begin := bod(f.FindSunday(pivot))
+	begin := bod(mostRecentSunday(pivot))
 	end := begin.AddDate(0, 0, 7)
 
 	return f.filterBetweenDatesInclusive(begin, end, filterOnCompletedDate)
@@ -321,14 +254,12 @@ func (f *DateFilter) filterCompletedThisWeek(pivot time.Time) []*Todo {
 func (f *DateFilter) filterOverdue(pivot time.Time) []*Todo {
 	var ret []*Todo
 
-	//pivotDate := pivot.Format(RFC3339)
-
 	for _, todo := range f.Todos {
 		if todo.Due == "" {
 			continue
 		}
-		todoTime := todo.ToTime(todo.Due) //time.ParseInLocation(time.RFC3339, todo.Due, f.Location)
-		if todoTime.Before(pivot) {       //&& pivot.pivotDate != todo.Due {
+		todoTime := stringToTime(todo.Due) //time.ParseInLocation(time.RFC3339, todo.Due, f.Location)
+		if todoTime.Before(pivot) {        //&& pivot.pivotDate != todo.Due {
 			ret = append(ret, todo)
 		}
 	}

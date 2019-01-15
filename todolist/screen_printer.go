@@ -328,7 +328,7 @@ func (f *ScreenPrinter) formatAge(createdDate string) string {
 		tmpTime, err := time.Parse(time.RFC3339, createdDate)
 		if err == nil {
 			createTime := tmpTime.Unix()
-			now := time.Now().Unix()
+			now := Now.Unix()
 			diff := now - createTime
 			days = (int)(diff / (60 * 60 * 24))
 		}
@@ -375,6 +375,11 @@ func (f *ScreenPrinter) PrintStats(filtered []*Todo, groupBy string, sumBy strin
 	rowNum := 0
 
 	groupedStats := statsData.GetSortedGroups()
+
+	if chart {
+		f.printStatChart(groupedStats, sumString)
+	}
+
 	for _, sg := range groupedStats {
 		fmt.Fprintln(f.Writer, f.fgYellow("[")+f.fgRed(sg.Group)+f.fgYellow("]"))
 		rowNum = 0
@@ -394,10 +399,6 @@ func (f *ScreenPrinter) PrintStats(filtered []*Todo, groupBy string, sumBy strin
 		}
 	}
 	f.Writer.Flush()
-
-	if chart {
-		f.printStatChart(groupedStats, sumString)
-	}
 }
 
 //Print todo with specific columns, order of columns, column headings, sort order
@@ -584,7 +585,7 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	colors = []func(a ...interface{}) string{f.fgGreen, f.fgGreen}
 	f.printCols(colors, "  Command", "Description")
 	colors = []func(a ...interface{}) string{f.fgCyan, f.fgYellow}
-	f.printCols(colors, "  help", "Print this help message. Pass specific command or 'config' as arg for more detail.")
+	f.printCols(colors, "  help", "Print this message. Pass a command, 'dates', 'filters', 'modifiers', 'args' or 'config' for more detail.")
 	f.printCols(colors, "  init", "Initialize a new repository in local directory.")
 	f.printCols(colors, "  add | a", "Add a new todo.")
 	f.printCols(colors, "  done", "Add an already completed todo (for recording purposes)")
@@ -610,6 +611,29 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	f.Writer.Flush()
 
 	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "  For full documentation, please visit http://github.com/fkmiec/todolist")
+	f.Writer.Flush()
+}
+
+func (f *ScreenPrinter) println(color func(a ...interface{}) string, line string) {
+	fmt.Fprintln(f.Writer, color(line))
+}
+
+func (f *ScreenPrinter) printCols(colors []func(a ...interface{}) string, txt ...string) {
+	vals := []string{}
+	for i, val := range txt {
+		vals = append(vals, colors[i](val))
+	}
+	f.PrintRow(vals)
+}
+
+func (f *ScreenPrinter) PrintDatesHelp() {
+	colors1 := []func(a ...interface{}) string{f.fgYellow}
+	f.printCols(colors1, "Using dates in filters, modifiers and arguments")
+	f.Writer.Flush()
+
+	colors := []func(a ...interface{}) string{f.fgCyan, f.fgYellow}
+	f.println(f.fgGreen, "")
 	f.println(f.fgGreen, "  Date specifiers used in filters and modifiers:")
 	f.printCols(colors, "    tod(ay)|tom(orrow)|yes(terday)|this_week|next_week|last_week", "Relative date.")
 	f.printCols(colors, "    mon|tue|wed|thu|fri|sat|sun", "Day of the week.")
@@ -618,7 +642,14 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	f.printCols(colors, "    none", "No date specified (e.g. filter for todos with no due date).")
 	f.printCols(colors, "    overdue", "Past due todos.")
 	f.Writer.Flush()
+}
 
+func (f *ScreenPrinter) PrintFiltersHelp() {
+	colors1 := []func(a ...interface{}) string{f.fgYellow}
+	f.printCols(colors1, "Using filters")
+	f.Writer.Flush()
+
+	colors := []func(a ...interface{}) string{f.fgCyan, f.fgYellow}
 	f.println(f.fgGreen, "")
 	f.println(f.fgGreen, "  Filters: ")
 	f.printCols(colors, "    [id or id range]", "Filter for specific id (e.g. 4) or range of ids (e.g. 4-7).")
@@ -637,7 +668,14 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	f.printCols(colors, "    notes:[true or false]", "Filter for todos with notes (or without notes if false).")
 	f.printCols(colors, "    [search words]", "Filter for todos with search words in the subject. Must not match other filters above.")
 	f.Writer.Flush()
+}
 
+func (f *ScreenPrinter) PrintModifiersHelp() {
+	colors1 := []func(a ...interface{}) string{f.fgYellow}
+	f.printCols(colors1, "Using modifiers")
+	f.Writer.Flush()
+
+	colors := []func(a ...interface{}) string{f.fgCyan, f.fgYellow}
 	f.println(f.fgGreen, "")
 	f.println(f.fgGreen, "  Modifiers:")
 	f.printCols(colors, "    +[project name]", "Add a project.")
@@ -649,7 +687,14 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	f.printCols(colors, "    until:[date specifier]", "Add or change the until (expiry) date.")
 	f.printCols(colors, "    pri:[priority specifier]", "Add or change the priority. Configurable. Default values are H,M,L.")
 	f.Writer.Flush()
+}
 
+func (f *ScreenPrinter) PrintArgsHelp() {
+	colors1 := []func(a ...interface{}) string{f.fgYellow}
+	f.printCols(colors1, "Using arguments (args)")
+	f.Writer.Flush()
+
+	colors := []func(a ...interface{}) string{f.fgCyan, f.fgYellow}
 	f.println(f.fgGreen, "")
 	f.println(f.fgGreen, "  Arguments (Generally only for list, report or stats commands):")
 	f.printCols(colors, "    sort:[+|-][id|project|context|ord:[all|pro|ctx]|due|age|priority]", "Override sort for the todo list.")
@@ -662,21 +707,6 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	f.printCols(colors, "    range:[start date][:end date]", "(stats) Limit stats report to a date range. Prefix relative past date references with '-'.")
 	f.printCols(colors, "    chart:[true|false]", "(stats) Display a burndown chart.")
 	f.Writer.Flush()
-
-	f.println(f.fgGreen, "")
-	f.println(f.fgGreen, "  For full documentation, please visit http://github.com/fkmiec/todolist")
-}
-
-func (f *ScreenPrinter) println(color func(a ...interface{}) string, line string) {
-	fmt.Fprintln(f.Writer, color(line))
-}
-
-func (f *ScreenPrinter) printCols(colors []func(a ...interface{}) string, txt ...string) {
-	vals := []string{}
-	for i, val := range txt {
-		vals = append(vals, colors[i](val))
-	}
-	f.PrintRow(vals)
 }
 
 func (f *ScreenPrinter) PrintAddHelp() {

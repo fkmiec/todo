@@ -138,7 +138,7 @@ func (s *StatsData) CalcStats(todos []*Todo, groupBy string, sum int, rangeTimes
 		if len(rangeTimes) > 1 {
 			endDate = rangeTimes[1]
 		} else {
-			endDate = time.Now()
+			endDate = Now
 		}
 
 		var rangeStats []*TodoStat
