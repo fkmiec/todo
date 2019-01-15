@@ -409,11 +409,11 @@ func (f *ScreenPrinter) printTodoStat(stat *TodoStat, cols []string, sum string)
 	if sum == "Day" {
 		sumIndex := stat.PeriodStartDate.YearDay()
 		sumInYear = sum + " " + strconv.Itoa(sumIndex)
-		date = "(" + stat.PeriodStartDate.Format("01/02/2006") + ")"
+		date = "(" + timeToSimpleDateString(stat.PeriodStartDate) + ")"
 	} else if sum == "Week" {
 		_, sumIndex := stat.PeriodStartDate.ISOWeek()
 		sumInYear = sum + " " + strconv.Itoa(sumIndex)
-		date = "(" + stat.PeriodStartDate.Format("01/02/2006") + ")"
+		date = "(" + timeToSimpleDateString(stat.PeriodStartDate) + ")"
 	} else {
 		sumInYear = stat.PeriodStartDate.Month().String()
 		date = strconv.Itoa(stat.PeriodStartDate.Year())

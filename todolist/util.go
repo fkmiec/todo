@@ -267,6 +267,10 @@ func timeToString(val time.Time) string {
 	return formatted
 }
 
+func timeToSimpleDateString(val time.Time) string {
+	return val.Format("2006-01-02")
+}
+
 // newUUID generates a random UUID according to RFC 4122
 func newUUID() (string, error) {
 	uuid := make([]byte, 16)
