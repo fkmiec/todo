@@ -589,23 +589,26 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	f.printCols(colors, "  init", "Initialize a new repository in local directory.")
 	f.printCols(colors, "  add | a", "Add a new todo.")
 	f.printCols(colors, "  done", "Add an already completed todo (for recording purposes)")
-	f.printCols(colors, "  list | l", "List todos. Listed todos can be constrained by filters (see below).")
+	f.printCols(colors, "  list | l", "List todos. Listed todos can be constrained by filters (see help filters).")
 	f.printCols(colors, "  projects", "List all projects and count of todos for each.")
 	f.printCols(colors, "  contexts", "List all contexts and count of todos for each.")
-	f.printCols(colors, "  print", "Print all todo details. Select todos by filter (see below).")
-	f.printCols(colors, "  edit | e", "Edit one or more todos. Todos edited are determined by filters (see below)")
-	f.printCols(colors, "  delete | d", "Delete todos. Deleted todos can be constrained by filters (see below).")
+	f.printCols(colors, "  print", "Print all todo details. Select todos by filter (see help filters).")
+	f.printCols(colors, "  edit | e", "Edit one or more todos. Todos edited are determined by filters (see help filters)")
+	f.printCols(colors, "  delete | d", "Delete todos. Deleted todos can be constrained by filters (see help filters).")
 	f.printCols(colors, "  order | ord | reorder", "Order todos in a set (all|+project|@context) relative to each other using ids.")
-	f.printCols(colors, "  complete | c", "Mark one or more todos as completed. Select todos by filter (see below).")
-	f.printCols(colors, "  archive | ar", "Archive one or more todos. Select todos by filter (see below).")
-	f.printCols(colors, "  unarchive | uar", "Un-archive one ore more todos. Select todos by filter (see below).")
+	f.printCols(colors, "  complete | c", "Mark one or more todos as completed. Select todos by filter (see help filters).")
+	f.printCols(colors, "  uncomplete | uc", "Un-complete one or more todos. Select todos by filter (see help filters).")
+	f.printCols(colors, "  archive | ar", "Archive one or more todos. Select todos by filter (see help filters).")
+	f.printCols(colors, "  unarchive | uar", "Un-archive one or more todos. Select todos by filter (see help filters).")
+	f.printCols(colors, "  ca", "Complete and Archive one or more todos in a single step. Select todos by filter (see help filters)")
+
 	f.printCols(colors, "  ac", "Archive all completed todos.")
 	f.printCols(colors, "  sync", "Synchronize todos with another file location. See .todorc file for sample config.")
 	f.printCols(colors, "  open", "Open a file or URL referenced in a todo note. The value 'notes' opens a todo-specific text file.")
 	f.printCols(colors, "  stats", "Print a statistical report of todos pending, added, completed, etc. Optionally show a chart.")
-	f.printCols(colors, "  an", "Add a note to one or more todos. Select todos by filter (see below).")
-	f.printCols(colors, "  en", "Edit a note for one or more todos. Select todos by filter (see below).")
-	f.printCols(colors, "  dn", "Delete a note for one or more todos. Select todos by filter (see below).")
+	f.printCols(colors, "  an", "Add a note to one or more todos. Select todos by filter (see help filters).")
+	f.printCols(colors, "  en", "Edit a note for one or more todos. Select todos by filter (see help filters).")
+	f.printCols(colors, "  dn", "Delete a note for one or more todos. Select todos by filter (see help filters).")
 	f.printCols(colors, "  view", "Set a view (ie. a default set of filters). A view is typically based on a context filter.")
 	f.printCols(colors, "  gc", "Garbage collect (permanently delete) all archived todos.")
 	f.Writer.Flush()
@@ -1206,6 +1209,27 @@ func (f *ScreenPrinter) PrintUncompleteHelp() {
 	f.printCols(colors2, "  Example:  ", "todo 2 uncomplete")
 	f.printCols(colors1, "Uncomplete all todos for project BigProject.")
 	f.printCols(colors2, "  Example:  ", "todo +BigProject uc")
+	f.Writer.Flush()
+}
+
+func (f *ScreenPrinter) PrintCompleteAndArchiveHelp() {
+	colors1 := []func(a ...interface{}) string{f.fgYellow}
+	f.printCols(colors1, "Complete and Archive todos in a single operation.")
+	f.Writer.Flush()
+
+	f.println(f.fgGreen, "")
+	colors1 = []func(a ...interface{}) string{f.fgCyan, f.fgYellow}
+	f.printCols(colors1, "  Syntax: ", "todo [filters] ca")
+	f.Writer.Flush()
+
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for completing and archiving todos:")
+	colors1 = []func(a ...interface{}) string{f.fgBlue, f.fgYellow}
+	colors2 := []func(a ...interface{}) string{f.fgMagenta, f.fgYellow}
+	f.printCols(colors1, "Complete and archive todo with id 2.")
+	f.printCols(colors2, "  Example:  ", "todo 2 ca")
+	f.printCols(colors1, "Complete and archive all todos for project BigProject.")
+	f.printCols(colors2, "  Example:  ", "todo +BigProject ca")
 	f.Writer.Flush()
 }
 

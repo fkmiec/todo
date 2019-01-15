@@ -478,6 +478,22 @@ func (a *App) Sync(c *CommandImpl) {
 	}
 }
 
+func (a *App) CompleteAndArchive(c *CommandImpl) {
+	a.LoadPending()
+	filtered := NewToDoFilter(a.TodoList.Todos()).Filter(c.Filters)
+	if len(filtered) == 0 {
+		return
+	}
+	a.TodoList.CompleteAndArchive(filtered...)
+	a.LoadArchived() //only do this when operating on archived
+	a.Save()
+	var ids []string
+	for _, todo := range filtered {
+		ids = append(ids, strconv.Itoa(todo.Id))
+	}
+	println("Completed and archived Todos:", strings.Join(ids, ","))
+}
+
 func (a *App) NewWebApp(c *CommandImpl) {
 	if err := a.LoadPending(); err != nil {
 		os.Exit(1)
@@ -750,6 +766,8 @@ func (a *App) PrintHelp(c *CommandImpl) {
 				p.PrintArchiveHelp()
 			case "unarchive", "uar":
 				p.PrintUnarchiveHelp()
+			case "ca":
+				p.PrintCompleteAndArchiveHelp()
 			case "order", "ord", "reorder":
 				p.PrintOrderTodosHelp()
 			case "an":
@@ -1029,6 +1047,9 @@ func (a *App) mapCommands() {
 
 	archiveCompletedCmd := NewCommand("ac", false, false, a.ArchiveCompleted)
 	a.CommandMap["ac"] = archiveCompletedCmd
+
+	completeAndArchiveCmd := NewCommand("ca", false, false, a.CompleteAndArchive)
+	a.CommandMap["ca"] = completeAndArchiveCmd
 
 	editCmd := NewCommand("edit", true, false, a.EditTodo)
 	a.CommandMap["e"] = editCmd

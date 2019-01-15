@@ -302,6 +302,16 @@ func (t *TodoList) Unarchive(todos ...*Todo) {
 	}
 }
 
+func (t *TodoList) CompleteAndArchive(todos ...*Todo) {
+	for _, td := range todos {
+		td.Complete()
+		td.Archive()
+		td.ModifiedDate = timeToString(Now)
+		td.IsModified = true
+		t.remove(td)
+		t.Data = append(t.Data, td)
+	}
+}
 func (t *TodoList) IndexOf(todoToFind *Todo) int {
 	for i, todo := range t.Data {
 		if todo.Id == todoToFind.Id {
