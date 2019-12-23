@@ -24,7 +24,7 @@ func main() {
         // will be overwritten each time, instead of adding new.
         tm.MoveCursor(1,1)
 
-        tm.Println("Current Time:", Now.Format(time.RFC1123))
+        tm.Println("Current Time:", time.Now().Format(time.RFC1123))
 
         tm.Flush() // Call it every time at the end of rendering
 

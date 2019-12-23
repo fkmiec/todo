@@ -2,7 +2,7 @@
 
 package termbox
 
-import runewidth "github.com/mattn/go-runewidth"
+import "github.com/mattn/go-runewidth"
 import "fmt"
 import "os"
 import "os/signal"
@@ -154,36 +154,6 @@ func Close() {
 	foreground = ColorDefault
 	background = ColorDefault
 	IsInit = false
-}
-
-func CloseWithoutClear() {
-	out.WriteString(funcs[t_show_cursor])
-	out.WriteString(funcs[t_sgr0])
-	//out.WriteString(funcs[t_clear_screen])
-	//out.WriteString(funcs[t_exit_ca])
-	out.WriteString(funcs[t_exit_keypad])
-	out.WriteString(funcs[t_exit_mouse])
-	tcsetattr(out.Fd(), &orig_tios)
-
-	out.Close()
-	syscall.Close(in)
-        
-	// reset the state, so that on next Init() it will work again
-        termw = 0
-        termh = 0
-        input_mode = InputEsc
-        out = nil
-        in = 0
-        lastfg = attr_invalid
-        lastbg = attr_invalid
-        lastx = coord_invalid
-        lasty = coord_invalid
-        cursor_x = cursor_hidden
-        cursor_y = cursor_hidden
-        foreground = ColorDefault
-        background = ColorDefault
-        IsInit = false
-
 }
 
 // Synchronizes the internal back buffer with the terminal.
