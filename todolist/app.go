@@ -280,38 +280,43 @@ func (a *App) EditTodo(c *CommandImpl) {
 
 func (a *App) AddNote(c *CommandImpl) {
 	a.LoadPending()
-	id, _ := strconv.Atoi(c.Filters[0])
-	if id == -1 {
+	filtered := NewToDoFilter(a.TodoList.Todos()).Filter(c.Filters)
+	if len(filtered) < 1 {
+		fmt.Println("Not found (filter): ", c.Filters)
+		fmt.Println("NOTE: Filters may include a view filter added from .todorc")
 		return
 	}
-	todo := a.TodoList.FindById(id)
-	if todo == nil {
-		fmt.Println("No such id.")
-		return
-	}
-	parser := &Parser{}
 
-	if parser.ParseAddNote(todo, c.Mods) {
-		todo.ModifiedDate = timeToString(Now)
-		todo.IsModified = true
-		fmt.Println("Note added.")
+	parser := &Parser{}
+	for _, todo := range filtered {
+		if parser.ParseAddNote(todo, c.Mods) {
+			todo.ModifiedDate = timeToString(Now)
+			todo.IsModified = true
+			fmt.Println("Note added to Todo ", todo.Id)
+		}
 	}
 	a.Save()
 }
 
 func (a *App) EditNote(c *CommandImpl) {
 	a.LoadPending()
-	id, _ := strconv.Atoi(c.Filters[0])
-	if id == -1 {
+	filtered := NewToDoFilter(a.TodoList.Todos()).Filter(c.Filters)
+	if len(filtered) < 1 {
+		fmt.Println("Not found (filter): ", c.Filters)
+		fmt.Println("NOTE: Filters may include a view filter added from .todorc")
 		return
 	}
-	todo := a.TodoList.FindById(id)
-	if todo == nil {
-		fmt.Println("No such id.")
+	if len(filtered) > 1 {
+		fmt.Println("Matched too many Todos: ")
+		for _, td := range filtered {
+			fmt.Println(td.Id, ": ", td.Subject)
+		}
+		fmt.Println("EditNote operates on one Todo at a time (filter): ", c.Filters)
+		fmt.Println("NOTE: Filters may include a view filter added from .todorc")
 		return
 	}
 	parser := &Parser{}
-
+	todo := filtered[0]
 	if parser.ParseEditNote(todo, c.Mods) {
 		todo.ModifiedDate = timeToString(Now)
 		todo.IsModified = true
@@ -322,17 +327,23 @@ func (a *App) EditNote(c *CommandImpl) {
 
 func (a *App) DeleteNote(c *CommandImpl) {
 	a.LoadPending()
-	id, _ := strconv.Atoi(c.Filters[0])
-	if id == -1 {
+	filtered := NewToDoFilter(a.TodoList.Todos()).Filter(c.Filters)
+	if len(filtered) < 1 {
+		fmt.Println("Not found (filter): ", c.Filters)
+		fmt.Println("NOTE: Filters may include a view filter added from .todorc")
 		return
 	}
-	todo := a.TodoList.FindById(id)
-	if todo == nil {
-		fmt.Println("No such id.")
+	if len(filtered) > 1 {
+		fmt.Println("Matched too many todos: ")
+		for _, td := range filtered {
+			fmt.Println(td.Id, ": ", td.Subject)
+		}
+		fmt.Println("DeleteNote operates on one Todo at a time (filter): ", c.Filters)
+		fmt.Println("NOTE: Filters may include a view filter added from .todorc")
 		return
 	}
 	parser := &Parser{}
-
+	todo := filtered[0]
 	if parser.ParseDeleteNote(todo, c.Mods) {
 		todo.ModifiedDate = timeToString(Now)
 		todo.IsModified = true
