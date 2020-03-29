@@ -26,6 +26,10 @@ func filterOnCompletedDate(todo *Todo) time.Time {
 	return stringToTime(todo.CompletedDate)
 }
 
+func filterOnModifiedDate(todo *Todo) time.Time {
+	return stringToTime(todo.ModifiedDate)
+}
+
 func (f *DateFilter) FilterExpired() []*Todo {
 	//dateInfo will be a simple date format (2018-12-01) or a day of week (sun-sat) or relative day reference (ie. today, tomorrow, yesterday)
 	var ret []*Todo
@@ -132,6 +136,21 @@ func (f *DateFilter) ageInDays(todo *Todo) int {
 }
 
 func (f *DateFilter) FilterDueDate(filters []string) ([]*Todo, []string) {
+	r, _ := regexp.Compile(`due:([^:]+)?(:(.*))?`)
+	return f.FilterDateRange(filters, r, filterOnDue)
+}
+
+func (f *DateFilter) FilterDoneDate(filters []string) ([]*Todo, []string) {
+	r, _ := regexp.Compile(`done:([^:]+)?(:(.*))?`)
+	return f.FilterDateRange(filters, r, filterOnCompletedDate)
+}
+
+func (f *DateFilter) FilterModDate(filters []string) ([]*Todo, []string) {
+	r, _ := regexp.Compile(`mod:([^:]+)?(:(.*))?`)
+	return f.FilterDateRange(filters, r, filterOnModifiedDate)
+}
+
+func (f *DateFilter) FilterDateRange(filters []string, regex *regexp.Regexp, dateConvFunc func(*Todo) time.Time) ([]*Todo, []string) {
 
 	var todos []*Todo
 	index := -1
@@ -142,8 +161,8 @@ loop:
 		var d1 string
 		var d2 string
 		var times []time.Time
-		r, _ := regexp.Compile(`due:([^:]+)?(:(.*))?`)
-		matches := r.FindStringSubmatch(filter)
+		//r, _ := regexp.Compile(`due:([^:]+)?(:(.*))?`)
+		matches := regex.FindStringSubmatch(filter)
 		if len(matches) > 0 {
 			index = i
 			d1 = strings.ToLower(matches[1])
@@ -170,9 +189,9 @@ loop:
 			len := len(times)
 			switch len {
 			case 1: //single date to match
-				todos = f.filterToExactDate(times[0], filterOnDue)
+				todos = f.filterToExactDate(times[0], dateConvFunc)
 			case 2: //date range to match
-				todos = f.filterBetweenDatesInclusive(times[0], times[1], filterOnDue)
+				todos = f.filterBetweenDatesInclusive(times[0], times[1], dateConvFunc)
 			case 0: //this should not happen, but if no times provided, ignore due filter and return all todos
 				//println("Received due: ", d1, " and time parsing returned nothing. Applying no due filter.")
 				todos = f.Todos

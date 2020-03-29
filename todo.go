@@ -22,7 +22,8 @@ func main() {
 	command := app.ProcessCmdLine(input)
 
 	//Protect against mass edit or delete
-	if command.GetCmd() == "edit" && len(command.GetFilters()) == 0 {
+	cmd := command.GetCmd()
+	if (cmd == "edit" || cmd == "archive" || cmd == "delete" || cmd == "complete") && len(command.GetFilters()) == 0 {
 		fmt.Println("Destructive operations require a filter. None specified. Aborting.")
 		return
 	}

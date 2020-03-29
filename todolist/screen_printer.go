@@ -183,6 +183,10 @@ func (f *ScreenPrinter) printColumnHeaders(cols []string, headers []string) {
 			vals = append(vals, f.fgGreen(headers[i]))
 		case "due":
 			vals = append(vals, f.fgGreen(headers[i]))
+		case "done":
+			vals = append(vals, f.fgGreen(headers[i]))
+		case "modified":
+			vals = append(vals, f.fgGreen(headers[i]))
 		case "priority":
 			vals = append(vals, f.fgGreen(headers[i]))
 		case "ord:all":
@@ -233,6 +237,10 @@ func (f *ScreenPrinter) printCustomTodo(todo *Todo, cols []string) {
 			vals = append(vals, f.formatAge(todo.CreatedDate))
 		case "due":
 			vals = append(vals, f.formatDue(todo.Due))
+		case "done":
+			vals = append(vals, f.formatModifiedDate(todo.CompletedDate))
+		case "modified":
+			vals = append(vals, f.formatModifiedDate(todo.ModifiedDate))
 		case "priority":
 			vals = append(vals, f.formatPriority(todo.Priority))
 		case "ord:all":
@@ -276,6 +284,20 @@ func (f *ScreenPrinter) formatDue(due string) string {
 	} else {
 		return f.fgBlue(dueTime.Format("Mon Jan 2"))
 	}
+}
+
+func (f *ScreenPrinter) formatModifiedDate(date string) string {
+	if date == "" {
+		return f.fgBlue(" ")
+	}
+	dateTime, err := time.Parse(time.RFC3339, date)
+
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("This may due to the corruption of .todos.json file.")
+		os.Exit(-1)
+	}
+	return f.fgYellow(dateTime.Format("Mon Jan 2"))
 }
 
 func (f *ScreenPrinter) formatProjects(projects []string) string {

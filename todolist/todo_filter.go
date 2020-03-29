@@ -28,7 +28,11 @@ func (f *ToDoFilter) Filter(filters []string) []*Todo {
 	//fmt.Println("filters after wait: ", filters)
 	f.Todos, filters = f.filterArchived(filters) //includes filter for completed OR filter for archived
 	//fmt.Println("filters after archive: ", filters)
-	f.Todos, filters = NewDateFilter(f.Todos).FilterAge(filters) //filter by due date
+	f.Todos, filters = NewDateFilter(f.Todos).FilterDoneDate(filters) //filter by completed date
+	//fmt.Println("filters after done/completed: ", filters)
+	f.Todos, filters = NewDateFilter(f.Todos).FilterModDate(filters) //filter by completed date
+	//fmt.Println("filters after modified: ", filters)
+	f.Todos, filters = NewDateFilter(f.Todos).FilterAge(filters) //filter by create date
 	//fmt.Println("filters after age: ", filters)
 	f.Todos, filters = NewDateFilter(f.Todos).FilterDueDate(filters) //filter by due date
 	//fmt.Println("filters after due: ", filters)
@@ -257,7 +261,7 @@ func (f *ToDoFilter) filterPrioritized(filters []string) ([]*Todo, []string) {
 			p := strings.Split(tmp, ",")
 			for _, pri := range p {
 				todos = append(todos, f.getTodosByPriority(pri, exclude)...)
-				println("Length with p=", pri, " is ", len(todos))
+				//println("Length with p=", pri, " is ", len(todos))
 			}
 			break
 		}
