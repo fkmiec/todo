@@ -276,13 +276,13 @@ func (f *ScreenPrinter) formatDue(due string) string {
 	}
 
 	if isToday(dueTime) {
-		return f.fgBlue("today")
+		return f.fgBlue("today     ")
 	} else if isTomorrow(dueTime) {
-		return f.fgBlue("tomorrow")
+		return f.fgBlue("tomorrow  ")
 	} else if isPastDue(dueTime) {
-		return f.fgRed(dueTime.Format("Mon Jan 2"))
+		return f.fgRed(dueTime.Format("Mon Jan 02"))
 	} else {
-		return f.fgBlue(dueTime.Format("Mon Jan 2"))
+		return f.fgBlue(dueTime.Format("Mon Jan 02"))
 	}
 }
 
@@ -297,7 +297,7 @@ func (f *ScreenPrinter) formatModifiedDate(date string) string {
 		fmt.Println("This may due to the corruption of .todos.json file.")
 		os.Exit(-1)
 	}
-	return f.fgYellow(dateTime.Format("Mon Jan 2"))
+	return f.fgYellow(dateTime.Format("Mon Jan 02"))
 }
 
 func (f *ScreenPrinter) formatProjects(projects []string) string {

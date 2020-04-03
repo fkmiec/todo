@@ -1037,10 +1037,12 @@ func (a *App) mapCommands() {
 	doneCmd := NewCommand("done", true, false, a.AddDoneTodo)
 	a.CommandMap["done"] = doneCmd
 
-	deleteCmd := NewCommand("delete", false, false, a.DeleteTodo)
+	//Added isAcceptsArgs = true to avoid values to right being interpeted as filters.
+	deleteCmd := NewCommand("delete", false, true, a.DeleteTodo)
 	a.CommandMap["d"] = deleteCmd
 
-	completeCmd := NewCommand("complete", false, false, a.CompleteTodo)
+	//Added isAcceptsArgs = true to avoid values to right being interpeted as filters.
+	completeCmd := NewCommand("complete", false, true, a.CompleteTodo)
 	a.CommandMap["c"] = completeCmd
 	a.CommandMap["complete"] = completeCmd
 
@@ -1048,7 +1050,8 @@ func (a *App) mapCommands() {
 	a.CommandMap["uc"] = uncompleteCmd
 	a.CommandMap["uncomplete"] = uncompleteCmd
 
-	archiveCmd := NewCommand("archive", false, false, a.ArchiveTodo)
+	//Added isAcceptsArgs = true to avoid values to right being interpeted as filters.
+	archiveCmd := NewCommand("archive", false, true, a.ArchiveTodo)
 	a.CommandMap["ar"] = archiveCmd
 	a.CommandMap["archive"] = archiveCmd
 
