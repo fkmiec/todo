@@ -278,6 +278,71 @@ func (a *App) EditTodo(c *CommandImpl) {
 	}
 }
 
+func (a *App) ExportTodo(c *CommandImpl) {
+	a.LoadPending()
+	filtered := NewToDoFilter(a.TodoList.Todos()).Filter(c.Filters)
+	//Create filename
+	now := time.Now()
+	today := now.Format("20060102")
+	filename := "./todo_export_" + today + ".json" //default value
+	if len(c.Args) > 0 {
+		for _, arg := range c.Args {
+			if strings.HasPrefix(arg, "file:") {
+				filename = arg[5:]
+				//No "/" path indicator == current working directory
+				if strings.Index(filename, "/") == -1 {
+					filename = "./" + filename
+				}
+			}
+		}
+	}
+	//Store to file. Q: Do we need a boolean confirm that is exported?
+	a.TodoStore.Export(filename, filtered)
+	fmt.Printf("%s exported.\n", pluralize(len(filtered), "Todo", "Todos"))
+}
+
+func (a *App) ImportTodo(c *CommandImpl) {
+
+	//Create filename automatically or read from args
+	now := time.Now()
+	today := now.Format("20060102")
+	filename := "./todo_export_" + today + ".json" //default value
+	if len(c.Args) > 0 {
+		for _, arg := range c.Args {
+			if strings.HasPrefix(arg, "file:") {
+				filename = arg[5:]
+				//No "/" path indicator == current working directory
+				if strings.Index(filename, "/") == -1 {
+					filename = "./" + filename
+				}
+			}
+		}
+	}
+	// fileExists checks if a file exists and is not a directory
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) || info.IsDir() {
+		fmt.Printf("File not found '%s'.\n", filename)
+		return
+	}
+
+	//Load todos from file.
+	todos, err := a.TodoStore.Import(filename)
+	if err != nil {
+		fmt.Printf("Failed to import todos from %s.\n", filename)
+		return
+	}
+	a.LoadPending()
+	//Loop over imported todos and call TodoList.Add(todo) for each one
+	//This will add the todo, renumber it, update modified date
+	for _, td := range todos {
+		a.TodoList.Add(td)
+	}
+	//Save updated pending todos
+	a.Save()
+	//Report success
+	fmt.Printf("%s imported.\n", pluralize(len(todos), "Todo", "Todos"))
+}
+
 func (a *App) AddNote(c *CommandImpl) {
 	a.LoadPending()
 	filtered := NewToDoFilter(a.TodoList.Todos()).Filter(c.Filters)
@@ -809,6 +874,10 @@ func (a *App) PrintHelp(c *CommandImpl) {
 				p.PrintOpenHelp()
 			case "stats":
 				p.PrintStatsHelp()
+			case "import":
+				p.PrintImportHelp()
+			case "export":
+				p.PrintExportHelp()
 			}
 		}
 	}
@@ -1116,4 +1185,12 @@ func (a *App) mapCommands() {
 
 	statsCmd := NewCommand("stats", true, false, a.Stats)
 	a.CommandMap["stats"] = statsCmd
+
+	importCmd := NewCommand("import", false, true, a.ImportTodo)
+	a.CommandMap["imp"] = importCmd
+	a.CommandMap["import"] = importCmd
+
+	exportCmd := NewCommand("export", false, true, a.ExportTodo)
+	a.CommandMap["exp"] = exportCmd
+	a.CommandMap["export"] = exportCmd
 }

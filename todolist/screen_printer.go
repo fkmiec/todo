@@ -626,6 +626,10 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 
 	f.printCols(colors, "  ac", "Archive all completed todos.")
 	f.printCols(colors, "  sync", "Synchronize todos with another file location. See .todorc file for sample config.")
+
+	f.printCols(colors, "  export", "Export a set of todos.")
+	f.printCols(colors, "  import", "Import a set of todos.")
+
 	f.printCols(colors, "  open", "Open a file or URL referenced in a todo note. The value 'notes' opens a todo-specific text file.")
 	f.printCols(colors, "  stats", "Print a statistical report of todos pending, added, completed, etc. Optionally show a chart.")
 	f.printCols(colors, "  an", "Add a note to one or more todos. Select todos by filter (see help filters).")
@@ -1104,6 +1108,50 @@ func (f *ScreenPrinter) PrintSyncHelp() {
 	f.printCols(colors2, "  Example:  ", "todo sync")
 	f.printCols(colors1, "Sync todos and list each locally added, modified or deleted todo.")
 	f.printCols(colors2, "  Example:  ", "todo sync verbose")
+	f.Writer.Flush()
+}
+
+func (f *ScreenPrinter) PrintExportHelp() {
+	colors1 := []func(a ...interface{}) string{f.fgYellow}
+	f.printCols(colors1, "Export todos")
+	f.Writer.Flush()
+
+	f.println(f.fgGreen, "")
+	colors1 = []func(a ...interface{}) string{f.fgCyan, f.fgYellow}
+	f.printCols(colors1, "  Syntax: ", "todo [filter] export [file:<filename>]")
+	f.Writer.Flush()
+
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for exporting todos:")
+	colors1 = []func(a ...interface{}) string{f.fgBlue, f.fgYellow}
+	colors2 := []func(a ...interface{}) string{f.fgMagenta, f.fgYellow}
+	f.printCols(colors1, "Export todos 1 and 2 to the current working directory.")
+	f.printCols(colors1, "  Default file is './todo_export_<date>.json'")
+	f.printCols(colors2, "  Example:  ", "todo 1-2 export")
+	f.printCols(colors1, "Export todo 2 to a specified file.")
+	f.printCols(colors2, "  Example:  ", "todo 2 export file:/tmp/exported.json")
+	f.Writer.Flush()
+}
+
+func (f *ScreenPrinter) PrintImportHelp() {
+	colors1 := []func(a ...interface{}) string{f.fgYellow}
+	f.printCols(colors1, "Import todos")
+	f.Writer.Flush()
+
+	f.println(f.fgGreen, "")
+	colors1 = []func(a ...interface{}) string{f.fgCyan, f.fgYellow}
+	f.printCols(colors1, "  Syntax: ", "todo import [file:<filename>]")
+	f.Writer.Flush()
+
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for importing todos:")
+	colors1 = []func(a ...interface{}) string{f.fgBlue, f.fgYellow}
+	colors2 := []func(a ...interface{}) string{f.fgMagenta, f.fgYellow}
+	f.printCols(colors1, "Import todos from default file in current working directory.")
+	f.printCols(colors1, "  Default file is './todo_export_<date>.json'")
+	f.printCols(colors2, "  Example:  ", "todo import")
+	f.printCols(colors1, "Import todos from a specified file.")
+	f.printCols(colors2, "  Example:  ", "todo import file:/tmp/exported.json")
 	f.Writer.Flush()
 }
 

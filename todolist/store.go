@@ -9,4 +9,6 @@ type Store interface {
 	AppendBacklog(filepath string, todos []*Todo)
 	DeleteBacklog(filepath string)
 	Save(todos []*Todo)
+	Import(filepath string) ([]*Todo, error)
+	Export(filepath string, todos []*Todo)
 }

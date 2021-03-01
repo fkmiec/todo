@@ -100,6 +100,21 @@ func (f *FileStore) LoadArchived() ([]*Todo, error) {
 	return todos, nil
 }
 
+func (f *FileStore) Import(filepath string) ([]*Todo, error) {
+	return f.load(filepath)
+}
+
+func (f *FileStore) Export(filepath string, todos []*Todo) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		data, _ := json.Marshal(todos)
+		f.saveTodos(data, filepath)
+	}()
+	wg.Wait()
+}
+
 func (f *FileStore) load(filepath string) ([]*Todo, error) {
 
 	data, err := ioutil.ReadFile(filepath)
@@ -279,4 +294,3 @@ func getBacklogLocation() string {
 		return homerepo
 	}
 }
-
