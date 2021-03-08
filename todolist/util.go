@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
+	"math"
 	"strings"
 	"time"
 )
@@ -283,4 +284,59 @@ func newUUID() (string, error) {
 	// version 4 (pseudo-random); see section 4.1.3
 	uuid[6] = uuid[6]&^0xf0 | 0x40
 	return fmt.Sprintf("%x-%x-%x-%x-%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:]), nil
+}
+
+//Calc exec order for all todos
+//Normalize values to between 0 and 1.
+func calcAllExecOrder(todos []*Todo) {
+	//Get priority values
+	priorityMap := Priority
+	numPs := len(priorityMap)
+	//Enforce maximum spacing of 10 if too few priority levels.
+	//Too few levels will yield low priority values that never rise to top
+	spacing := numPs
+	if numPs < 10 {
+		spacing = 10
+	}
+	for _, t := range todos {
+		var p int
+		var ok bool
+		if p, ok = priorityMap[t.Priority]; !ok {
+			p = numPs //sort unknown priority values to last
+		}
+		p = 100 - (p * spacing) //assumes num of priorities is less than 10.
+		calcExecOrder(t, (float64(p) / 100.0))
+	}
+}
+
+func calcExecOrder(t *Todo, p float64) {
+	//ExecOrder calculated only if needed. Needed in multiple places, so check
+	//if already calculated.
+	if t.ExecOrder == 0 {
+		//Get days til due values
+		d := 0
+		if len(t.Due) > 0 {
+			tmpTime, err := time.Parse(time.RFC3339, t.Due)
+			if err == nil {
+				dueTime := tmpTime.Unix()
+				now := Now.Unix()
+				diff := now - dueTime
+				d = int(math.Abs(float64(diff) / (60 * 60 * 24)))
+				if d < 1 {
+					d = 1
+				}
+			}
+		}
+		//Calc execution order: priority * (effort days / due (available) days)
+		//(effort days / due (available) days) gives a percentage
+		//priority will be a value between .01 and 1
+		//Result will be a pct of a pct
+		if t.EffortDays == 0 {
+			t.EffortDays = 1
+		}
+		t.ExecOrder = float64(p) * (t.EffortDays / float64(d))
+		if t.ExecOrder > .999 {
+			t.ExecOrder = .999
+		}
+	}
 }

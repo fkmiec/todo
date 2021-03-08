@@ -86,6 +86,7 @@ func (f *ScreenPrinter) PrintTodoDetail(todos []*Todo) {
 		fmt.Fprintf(f.Writer, " %s\t%s\n", key("Projects:"), val(strings.Join(todo.Projects, ",")))
 		fmt.Fprintf(f.Writer, " %s\t%s\n", key("Due:"), val(todo.Due))
 		fmt.Fprintf(f.Writer, " %s\t%s\n", key("Priority:"), val(todo.Priority))
+		fmt.Fprintf(f.Writer, " %s\t%s\n", key("EffortDays:"), val(fmt.Sprint(todo.EffortDays)))
 		fmt.Fprintf(f.Writer, " %s\t%s\n", key("Ordinals:"), val(fmt.Sprint(todo.Ordinals)[3:]))
 		fmt.Fprintf(f.Writer, " %s\t%s\n", key("IsModified:"), val(todo.IsModified))
 		fmt.Fprintf(f.Writer, " %s\t%s\n", key("Completed:"), val(todo.Completed))
@@ -181,6 +182,8 @@ func (f *ScreenPrinter) printColumnHeaders(cols []string, headers []string) {
 			vals = append(vals, f.fgGreen(headers[i]))
 		case "age":
 			vals = append(vals, f.fgGreen(headers[i]))
+		case "idle":
+			vals = append(vals, f.fgGreen(headers[i]))
 		case "due":
 			vals = append(vals, f.fgGreen(headers[i]))
 		case "done":
@@ -188,6 +191,10 @@ func (f *ScreenPrinter) printColumnHeaders(cols []string, headers []string) {
 		case "modified":
 			vals = append(vals, f.fgGreen(headers[i]))
 		case "priority":
+			vals = append(vals, f.fgGreen(headers[i]))
+		case "effort":
+			vals = append(vals, f.fgGreen(headers[i]))
+		case "exec_order":
 			vals = append(vals, f.fgGreen(headers[i]))
 		case "ord:all":
 			vals = append(vals, f.fgGreen(headers[i]))
@@ -235,6 +242,8 @@ func (f *ScreenPrinter) printCustomTodo(todo *Todo, cols []string) {
 			vals = append(vals, f.formatCompleted(todo.Completed))
 		case "age":
 			vals = append(vals, f.formatAge(todo.CreatedDate))
+		case "idle":
+			vals = append(vals, f.formatIdle(todo.ModifiedDate))
 		case "due":
 			vals = append(vals, f.formatDue(todo.Due))
 		case "done":
@@ -243,6 +252,10 @@ func (f *ScreenPrinter) printCustomTodo(todo *Todo, cols []string) {
 			vals = append(vals, f.formatModifiedDate(todo.ModifiedDate))
 		case "priority":
 			vals = append(vals, f.formatPriority(todo.Priority))
+		case "effort":
+			vals = append(vals, f.formatEffort(todo.EffortDays))
+		case "exec_order":
+			vals = append(vals, f.formatExecOrder(todo))
 		case "ord:all":
 			vals = append(vals, f.formatOrdinal(0, todo)) //0 = all
 		case "ord:pro":
@@ -328,6 +341,17 @@ func (f *ScreenPrinter) formatPriority(p string) string {
 	return f.fgRed(p)
 }
 
+func (f *ScreenPrinter) formatEffort(cnt float64) string {
+	var val string
+	if cnt < 1 {
+		val = fmt.Sprintf("%.2f", cnt)
+	} else {
+		val = fmt.Sprintf("%d", int(cnt))
+	}
+	coloredWords := f.fgYellow(val, "d")
+	return coloredWords
+}
+
 func (f *ScreenPrinter) formatOrdinal(ordType int, todo *Todo) string {
 	switch ordType {
 	case 0:
@@ -352,6 +376,26 @@ func (f *ScreenPrinter) formatAge(createdDate string) string {
 			createTime := tmpTime.Unix()
 			now := Now.Unix()
 			diff := now - createTime
+			days = (int)(diff / (60 * 60 * 24))
+		}
+	}
+	coloredWords := f.fgYellow(days, "d")
+	return coloredWords
+}
+
+func (f *ScreenPrinter) formatExecOrder(t *Todo) string {
+	coloredWords := f.fgYellow(fmt.Sprintf("%.3f", t.ExecOrder))
+	return coloredWords
+}
+
+func (f *ScreenPrinter) formatIdle(modifiedDate string) string {
+	days := 0
+	if len(modifiedDate) > 0 {
+		tmpTime, err := time.Parse(time.RFC3339, modifiedDate)
+		if err == nil {
+			modifiedTime := tmpTime.Unix()
+			now := Now.Unix()
+			diff := now - modifiedTime
 			days = (int)(diff / (60 * 60 * 24))
 		}
 	}
@@ -616,6 +660,7 @@ func (f *ScreenPrinter) PrintOverallHelp() {
 	f.printCols(colors, "  contexts", "List all contexts and count of todos for each.")
 	f.printCols(colors, "  print", "Print all todo details. Select todos by filter (see help filters).")
 	f.printCols(colors, "  edit | e", "Edit one or more todos. Todos edited are determined by filters (see help filters)")
+	f.printCols(colors, "  touch | t", "Touch (ie. set modified date to now) one or more todos. Todos touched are determined by filters (see help filters)")
 	f.printCols(colors, "  delete | d", "Delete todos. Deleted todos can be constrained by filters (see help filters).")
 	f.printCols(colors, "  order | ord | reorder", "Order todos in a set (all|+project|@context) relative to each other using ids.")
 	f.printCols(colors, "  complete | c", "Mark one or more todos as completed. Select todos by filter (see help filters).")
@@ -712,6 +757,7 @@ func (f *ScreenPrinter) PrintModifiersHelp() {
 	f.printCols(colors, "    @[context name]", "Add a context.")
 	f.printCols(colors, "    -@[context name]", "Remove a context.")
 	f.printCols(colors, "    due:[date]", "Add or change the due date.")
+	f.printCols(colors, "    effort:[count][h,d,w,m,y]", "Add or change the days of effort. Value may be specified as decimal hours, days, weeks, months or years. Display will always be in shown as days of effort.")
 	f.printCols(colors, "    wait:[date specifier]", "Add or change the wait date.")
 	f.printCols(colors, "    until:[date specifier]", "Add or change the until (expiry) date.")
 	f.printCols(colors, "    pri:[priority specifier]", "Add or change the priority. Configurable. Default values are H,M,L.")
@@ -726,7 +772,7 @@ func (f *ScreenPrinter) PrintArgsHelp() {
 	colors := []func(a ...interface{}) string{f.fgCyan, f.fgYellow}
 	f.println(f.fgGreen, "")
 	f.println(f.fgGreen, "  Arguments (Generally only for list, report or stats commands):")
-	f.printCols(colors, "    sort:[+|-][id|project|context|ord:[all|pro|ctx]|due|age|priority]", "Override sort for the todo list.")
+	f.printCols(colors, "    sort:[+|-][id|project|context|ord:[all|pro|ctx]|due|created|modified|age|idle|priority]", "Override sort for the todo list.")
 	f.printCols(colors, "    filter:[+|-][see filters above]", "Override filters for todo list.")
 	f.printCols(colors, "    group:[project | context]", "Group todos by project or context. Override group config for todo list.")
 	f.printCols(colors, "    notes:[true or false]", "List of todos will include the notes for todos that have them.")
@@ -836,6 +882,29 @@ func (f *ScreenPrinter) PrintEditHelp() {
 	f.printCols(colors2, "  Example:  ", "todo pri:L e wait:1w")
 	f.printCols(colors1, "Edit todo with id 5 to change the subject.")
 	f.printCols(colors2, "  Example:  ", "todo 5 e Do something else instead.")
+	f.Writer.Flush()
+}
+
+func (f *ScreenPrinter) PrintTouchHelp() {
+	colors1 := []func(a ...interface{}) string{f.fgYellow}
+	f.printCols(colors1, "Touch todos")
+	f.Writer.Flush()
+
+	f.println(f.fgGreen, "")
+	colors1 = []func(a ...interface{}) string{f.fgCyan, f.fgYellow}
+	f.printCols(colors1, "  Syntax: ", "todo [filters] [touch | t]")
+	f.Writer.Flush()
+
+	f.println(f.fgGreen, "")
+	f.println(f.fgGreen, "Examples for touching (ie. updating modified date) todos:")
+	colors1 = []func(a ...interface{}) string{f.fgBlue, f.fgYellow}
+	colors2 := []func(a ...interface{}) string{f.fgMagenta, f.fgYellow}
+	f.printCols(colors1, "Touch the todo with id 2.")
+	f.printCols(colors2, "  Example:  ", "todo 2 t")
+	f.printCols(colors1, "Touch all todos for project BigProject.")
+	f.printCols(colors2, "  Example:  ", "todo +BigProject t")
+	f.printCols(colors1, "Touch todos with ids 1,3,5,7,9")
+	f.printCols(colors2, "  Example:  ", "todo 1,3,5,7,9 touch")
 	f.Writer.Flush()
 }
 
@@ -1350,7 +1419,7 @@ func (f *ScreenPrinter) PrintConfigHelp() {
 	f.printCols(colors2, "  report.<name>.description  ", "A description for this report.")
 	f.printCols(colors2, "  report.<name>.columns  ", "Columns to display (comma-sep). [id|completed|age|due|context|project|ord:all|ord:pro|ord:ctx]")
 	f.printCols(colors2, "  report.<name>.headers  ", "Display headers for columns (comma-sep). e.g. 'Id' for id, 'Age' for age.")
-	f.printCols(colors2, "  report.<name>.sort  ", "Multi-sorting instructions (comma-sep). [+/-][id|age|due|context|project|ord:all|ord:pro|ord:ctx]")
+	f.printCols(colors2, "  report.<name>.sort  ", "Multi-sorting instructions (comma-sep). [+/-][id|age|idle|due|created|modified|context|project|ord:all|ord:pro|ord:ctx]")
 	f.printCols(colors2, "  report.<name>.filter  ", "Filters (comma-sep). See main 'help' for details on filters.")
 	f.printCols(colors2, "  report.<name>.group  ", "[project | context]")
 	f.printCols(colors2, "  report.<name>.notes  ", "[true|false]")

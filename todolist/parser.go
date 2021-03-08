@@ -53,6 +53,37 @@ func (p *Parser) ParseInput(mods []string, todo *Todo, todolist *TodoList) {
 		} else if strings.HasPrefix(part, "pri:") {
 			tmp := part[4:]
 			todo.Priority = tmp
+		} else if strings.HasPrefix(part, "effort:") {
+			var cnt float64
+			tmp := part[7:]
+			tmp = strings.ToLower(tmp)
+			//Check for relative date
+			r, _ := regexp.Compile(`(\d*\.?\d+)([dwmyh]{1})`)
+			if r.MatchString(tmp) {
+				matches := r.FindStringSubmatch(tmp)
+				unit := strings.ToLower(matches[2])
+				//cnt, err := strconv.Atoi(matches[1])
+				f, err := strconv.ParseFloat(matches[1], 64)
+				if err != nil {
+					fmt.Println("Could not parse effort days: ", tmp, ":", err)
+					os.Exit(1)
+				}
+				if unit == "d" {
+					cnt = float64(f)
+				} else if unit == "w" {
+					cnt = float64(7 * f)
+				} else if unit == "m" {
+					cnt = float64(30 * f)
+				} else if unit == "y" {
+					cnt = float64(365 * f)
+				} else if unit == "h" {
+					cnt = float64(f / 24)
+				}
+			}
+			todo.EffortDays = cnt
+		} else if strings.HasPrefix(part, "mod:") {
+			tmp := part[4:]
+			todo.ModifiedDate = p.FormatDateTime(tmp, Now)
 		} else {
 			subj = append(subj, mods[i])
 		}
@@ -172,17 +203,18 @@ func (p *Parser) ParseDateTime(input string, relativeTime time.Time) time.Time {
 		}
 		targetDate := Now
 		if unit == "d" {
-			targetDate = targetDate.AddDate(0, 0, 1*cnt)
+			targetDate = bod(targetDate.AddDate(0, 0, 1*cnt))
 		} else if unit == "w" {
-			targetDate = targetDate.AddDate(0, 0, 7*cnt)
+			targetDate = bod(targetDate.AddDate(0, 0, 7*cnt))
 		} else if unit == "m" {
-			targetDate = targetDate.AddDate(0, 1*cnt, 0)
+			targetDate = bod(targetDate.AddDate(0, 1*cnt, 0))
 		} else if unit == "y" {
-			targetDate = targetDate.AddDate(1*cnt, 0, 0)
+			targetDate = bod(targetDate.AddDate(1*cnt, 0, 0))
+			//Remove bod() function for hours so that time is not set to midnight.
 		} else if unit == "h" {
 			targetDate = targetDate.Add(time.Duration(cnt) * time.Hour)
 		}
-		return bod(targetDate)
+		return targetDate
 	}
 
 	//support look back a week as well as look forward

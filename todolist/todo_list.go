@@ -224,15 +224,34 @@ func (t *TodoList) Edit(mods []string, todos ...*Todo) bool {
 	parser := &Parser{}
 	isEdited := false
 	for _, todo := range todos {
+		//Set mod date default to current time. Edit op can override with mod:<date>
+		//NOTE - Reversed in else clause if edit fails
+		origModDate := todo.ModifiedDate
+		todo.ModifiedDate = timeToString(Now)
 		if parser.ParseEditTodo(todo, mods, t) {
-			todo.ModifiedDate = timeToString(Now)
 			todo.IsModified = true
 			t.remove(todo)
 			t.Data = append(t.Data, todo)
 			isEdited = true
+		} else {
+			todo.IsModified = false
+			todo.ModifiedDate = origModDate
 		}
 	}
 	return isEdited
+}
+
+func (t *TodoList) Touch(todos ...*Todo) bool {
+	isTouched := false
+	for _, todo := range todos {
+		//Set modified date to current date by default
+		todo.ModifiedDate = timeToString(Now)
+		todo.IsModified = true
+		t.remove(todo)
+		t.Data = append(t.Data, todo)
+		isTouched = true
+	}
+	return isTouched
 }
 
 func (t *TodoList) Delete(todos ...*Todo) {

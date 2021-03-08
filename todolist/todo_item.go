@@ -22,10 +22,12 @@ type Todo struct {
 	Wait          string         `json:"wait"`
 	Until         string         `json:"until"`
 	Due           string         `json:"due"`
+	EffortDays    float64        `json:"effortDays"`
 	Completed     bool           `json:"completed"`
 	CompletedDate string         `json:"completedDate"`
 	Status        string         `json:"status"`
 	Notes         []string       `json:"notes"`
+	ExecOrder     float64
 }
 
 func NewTodo() *Todo {

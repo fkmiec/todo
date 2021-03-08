@@ -278,6 +278,16 @@ func (a *App) EditTodo(c *CommandImpl) {
 	}
 }
 
+func (a *App) TouchTodo(c *CommandImpl) {
+	a.LoadPending()
+	filtered := NewToDoFilter(a.TodoList.Todos()).Filter(c.Filters)
+	isTouched := a.TodoList.Touch(filtered...)
+	if isTouched {
+		a.Save()
+		fmt.Printf("%s touched.\n", pluralize(len(filtered), "Todo", "Todos"))
+	}
+}
+
 func (a *App) ExportTodo(c *CommandImpl) {
 	a.LoadPending()
 	filtered := NewToDoFilter(a.TodoList.Todos()).Filter(c.Filters)
@@ -832,6 +842,8 @@ func (a *App) PrintHelp(c *CommandImpl) {
 				p.PrintEditHelp()
 			case "delete", "d":
 				p.PrintDeleteHelp()
+			case "touch", "t":
+				p.PrintTouchHelp()
 			case "done":
 				p.PrintDoneHelp()
 			case "complete", "c":
@@ -1137,6 +1149,10 @@ func (a *App) mapCommands() {
 	editCmd := NewCommand("edit", true, false, a.EditTodo)
 	a.CommandMap["e"] = editCmd
 	a.CommandMap["edit"] = editCmd
+
+	touchCmd := NewCommand("touch", false, false, a.TouchTodo)
+	a.CommandMap["t"] = touchCmd
+	a.CommandMap["touch"] = touchCmd
 
 	garbageCollectCmd := NewCommand("gc", false, false, a.GarbageCollect)
 	a.CommandMap["gc"] = garbageCollectCmd

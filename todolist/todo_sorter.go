@@ -45,6 +45,12 @@ func NewTodoSorter(sortCols ...string) *TodoSorter {
 			sorters = append(sorters, Notes(asc))
 		case "age":
 			sorters = append(sorters, Age(asc))
+		case "idle":
+			sorters = append(sorters, Modified(asc))
+		case "effort":
+			sorters = append(sorters, Effort(asc))
+		case "exec":
+			sorters = append(sorters, ExecOrder(asc))
 		case "ord:all":
 			sorters = append(sorters, OrdinalAll(asc))
 		case "ord:pro":
@@ -53,6 +59,8 @@ func NewTodoSorter(sortCols ...string) *TodoSorter {
 			sorters = append(sorters, OrdinalContext(asc))
 		case "created":
 			sorters = append(sorters, Created(asc))
+		case "modified":
+			sorters = append(sorters, Modified(asc))
 		case "subject":
 			sorters = append(sorters, Subject(asc))
 		}
@@ -63,6 +71,7 @@ func NewTodoSorter(sortCols ...string) *TodoSorter {
 
 // Sort sorts the argument slice according to the less functions passed to OrderedBy.
 func (s *TodoSorter) Sort(todos []*Todo) {
+	calcAllExecOrder(todos)
 	s.todos = todos
 	sort.Sort(s)
 }
@@ -252,6 +261,45 @@ func Age(asc bool) lessFunc {
 	return age
 }
 
+func Effort(asc bool) lessFunc {
+	order := func(t1, t2 *Todo) int {
+		ret := 0
+		if t1.EffortDays < t2.EffortDays {
+			ret = -1
+		} else if t1.EffortDays > t2.EffortDays {
+			ret = 1
+		} else {
+			ret = 0
+		}
+		if asc {
+			return ret
+		} else {
+			return -1 * ret
+		}
+	}
+	return order
+}
+
+//execution order = priority / (days til due / days of effort)
+func ExecOrder(asc bool) lessFunc {
+	order := func(t1, t2 *Todo) int {
+		ret := 0
+		if t1.ExecOrder < t2.ExecOrder {
+			ret = -1
+		} else if t1.ExecOrder > t2.ExecOrder {
+			ret = 1
+		} else {
+			ret = 0
+		}
+		if asc {
+			return ret
+		} else {
+			return -1 * ret
+		}
+	}
+	return order
+}
+
 func Due(asc bool) lessFunc {
 	due := func(t1, t2 *Todo) int {
 		ret := 0
@@ -277,6 +325,25 @@ func Created(asc bool) lessFunc {
 		if t1.CreatedDate < t2.CreatedDate {
 			ret = -1
 		} else if t1.CreatedDate > t2.CreatedDate {
+			ret = 1
+		} else {
+			ret = 0
+		}
+		if asc {
+			return ret
+		} else {
+			return -1 * ret
+		}
+	}
+	return d
+}
+
+func Modified(asc bool) lessFunc {
+	d := func(t1, t2 *Todo) int {
+		ret := 0
+		if t1.ModifiedDate < t2.ModifiedDate {
+			ret = -1
+		} else if t1.ModifiedDate > t2.ModifiedDate {
 			ret = 1
 		} else {
 			ret = 0
