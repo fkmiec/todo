@@ -36,7 +36,9 @@ func (f *ToDoFilter) Filter(filters []string) []*Todo {
 	//fmt.Println("filters after age: ", filters)
 	f.Todos, filters = NewDateFilter(f.Todos).FilterDueDate(filters) //filter by due date
 	//fmt.Println("filters after due: ", filters)
-	f.Todos, filters = f.filterPrioritized(filters) //Not useful until we redefine how priority works (number or ordinal values, rather than bool)
+	f.Todos, filters = f.FilterEffort(filters) //filter by effort
+	//fmt.Println("filters after effort: ", filters)
+	f.Todos, filters = f.filterPrioritized(filters)
 	//fmt.Println("filters after priority: ", filters)
 	f.Todos, filters = f.filterProjects(filters)
 	//fmt.Println("filters after project: ", filters)
@@ -49,6 +51,46 @@ func (f *ToDoFilter) Filter(filters []string) []*Todo {
 	f.Todos = f.filterSubject(filters)
 	//fmt.Println("filters after Subject: ", filters)
 	return f.Todos
+}
+
+func (f *ToDoFilter) FilterEffort(filters []string) ([]*Todo, []string) {
+	//e.g. effort:1-3d or effort:1d or effort:1-0
+	index := -1
+	var todos []*Todo
+	min := -1.0
+	max := -1.0
+	re, _ := regexp.Compile("effort:(\\d*\\.?\\d+)(-(\\d*\\.?\\d+))?\\w*")
+	for i, filter := range filters {
+		if re.MatchString(filter) {
+			index = i
+			matches := re.FindStringSubmatch(filter)
+			min, _ = strconv.ParseFloat(matches[1], 64)
+			if matches[3] != "" {
+				max, _ = strconv.ParseFloat(matches[3], 64)
+			}
+			break
+		}
+	}
+	//If no max specified, match min effort exactly
+	if max == -1 {
+		max = min
+		//If max specified with another value less than min (e.g. 1-0)
+		//return all todos older than min
+	} else if max < min {
+		max = 99999999
+	}
+	for _, todo := range f.Todos {
+		days := todo.EffortDays
+		if days >= min && days <= max {
+			todos = append(todos, todo)
+		}
+	}
+
+	if index > -1 {
+		filters = append(filters[0:index], filters[index+1:]...)
+		return todos, filters
+	}
+	return f.Todos, filters
 }
 
 func (f *ToDoFilter) filterHasNotes(filters []string) ([]*Todo, []string) {
@@ -326,6 +368,17 @@ func (f *ToDoFilter) filterTopN(filters []string) ([]*Todo, []string) {
 					if count <= max {
 						todos = append(todos, todo)
 					}
+				}
+			}
+		} else if strings.HasPrefix(filter, "top:") {
+			index = i
+			max, _ := strconv.Atoi(strings.TrimPrefix(filter, "top:"))
+			//loop thru todos and keep only top N
+			cnt := 0
+			for _, todo := range f.Todos {
+				cnt++
+				if cnt <= max {
+					todos = append(todos, todo)
 				}
 			}
 		}
