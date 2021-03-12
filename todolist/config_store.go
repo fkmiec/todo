@@ -62,7 +62,7 @@ func (f *ConfigStore) Load() (*Config, error) {
 	//Default regex for web URLs
 	config.OpenCustomRegex["browser"] = "((((https?://)?(www.))|(https?://))\\S+)"
 	//Default regex for files
-	config.OpenCustomRegex["file"] = "((\\/|\\.\\/|~\\/|\\w:\\/)\\S+)"
+	config.OpenCustomRegex["file"] = "((\\/|\\.\\/|~\\/|\\w:\\/).+)"
 
 	// default values for priority
 	Priority = map[string]int{"H": 1, "M": 2, "L": 3}

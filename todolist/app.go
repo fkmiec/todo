@@ -2,7 +2,6 @@ package todolist
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 	"regexp"
 	"strconv"
@@ -655,6 +654,8 @@ func (a *App) Open(c *CommandImpl) {
 
 		openTasks := []*OpenTask{}
 
+		//var isBrowserTask = false
+
 		var notes []string
 		for _, todo := range todos {
 			notes = todo.Notes
@@ -719,6 +720,7 @@ func (a *App) Open(c *CommandImpl) {
 							}
 							//If matched browser type, quit so not overwritten by less specific file type matching
 							if k == "browser" {
+								//isBrowserTask = true
 								break
 							}
 						} else {
@@ -747,6 +749,11 @@ func (a *App) Open(c *CommandImpl) {
 			if task.Uri == "notes" {
 				a.openNotes(task.Todo.Uuid, task.Cmd)
 			} else {
+				//if isBrowserTask {
+				//	task.Uri = a.EncodeUri(task.Uri)
+				//} else {
+				//task.Uri = a.UnspaceUri(task.Uri)
+				//}
 				if task.Cmd == "" {
 					a.openUri(task.Uri)
 				} else {
@@ -825,6 +832,7 @@ func (a *App) openNotes(uuid string, cmd string) {
 //This only works for web urls
 //Still have a challenge with Windows files and paths with spaces
 //Not using in openUri function above.
+/*
 func (a *App) EncodeUri(uri string) string {
 	eUri, err := url.Parse(uri)
 	if err != nil {
@@ -848,6 +856,40 @@ func (a *App) EncodeUri(uri string) string {
 	fmt.Println("URL: " + encoded)
 	return encoded
 }
+
+func (a *App) UnspaceUri(uri string) string {
+
+	re, _ := regexp.Compile("\\s")
+	hasSpaces := (strings.Index(uri, " ") > -1)
+	if !hasSpaces {
+		fmt.Println("No spaces found")
+		return uri
+	}
+	eUri, err := url.Parse(uri)
+	if err != nil {
+		fmt.Printf("Error parsing uri: '%s'. Error: %s\n", uri, err.Error())
+		os.Exit(1)
+	}
+	path := filepath.ToSlash(eUri.Path)
+
+	parts := strings.Split(path, "/")
+	for i, part := range parts {
+		if re.MatchString(part) {
+			fmt.Println("BEFORE: " + part)
+			parts[i] = fmt.Sprintf("\"%s\"", part)
+			fmt.Println("AFTER: " + parts[i])
+		}
+	}
+	path = strings.Join(parts, string(filepath.Separator))
+	scheme := eUri.Scheme
+	if scheme != "" {
+		uri = scheme + "://"
+	}
+	uri = scheme + path
+	fmt.Println("RETURNING: " + uri)
+	return uri
+}
+*/
 
 func (a *App) PrintHelp(c *CommandImpl) {
 	p := NewScreenPrinter()
