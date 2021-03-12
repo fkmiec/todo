@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"os/user"
+	"strconv"
 	"strings"
 )
 
@@ -22,12 +22,12 @@ type Config struct {
 	CurrentView              string
 	SyncFilepath             string
 	SyncEncryptionPassphrase string
-	OpenNotesFolder string
-	OpenNotesExt string
-	OpenNotesRegex string
-	OpenNotesCmd string
-	OpenCustomRegex map[string]string
-	OpenCustomCmd map[string]string
+	OpenNotesFolder          string
+	OpenNotesExt             string
+	OpenNotesRegex           string
+	OpenNotesCmd             string
+	OpenCustomRegex          map[string]string
+	OpenCustomCmd            map[string]string
 }
 
 //Declare Priority global because need access in filter and sorter
@@ -43,7 +43,7 @@ func (f *ConfigStore) Load() (*Config, error) {
 	f.FileLocation = getConfigLocation()
 	usr, _ := user.Current()
 	notesDir := fmt.Sprintf("%s/.todo_notes", usr.HomeDir)
-	
+
 	// init with some defaults
 	config := Config{
 		Aliases:                  map[string]string{"alias.report": "list"},
@@ -52,12 +52,12 @@ func (f *ConfigStore) Load() (*Config, error) {
 		CurrentView:              "",
 		SyncFilepath:             "",
 		SyncEncryptionPassphrase: "",
-		OpenNotesFolder: 		  notesDir,
-		OpenNotesExt:			  ".txt",
-		OpenNotesRegex:			  "notes",
-		OpenNotesCmd:			  "",
-		OpenCustomRegex: 		  map[string]string{},
-		OpenCustomCmd: 			  map[string]string{},
+		OpenNotesFolder:          notesDir,
+		OpenNotesExt:             ".txt",
+		OpenNotesRegex:           "notes",
+		OpenNotesCmd:             "",
+		OpenCustomRegex:          map[string]string{},
+		OpenCustomCmd:            map[string]string{},
 	}
 	//Default regex for web URLs
 	config.OpenCustomRegex["browser"] = "((((https?://)?(www.))|(https?://))\\S+)"
@@ -130,7 +130,9 @@ func (f *ConfigStore) Load() (*Config, error) {
 					config.SyncEncryptionPassphrase = strings.TrimSpace(value)
 				} else if strings.HasPrefix(key, "open") {
 					keys := strings.Split(key, ".")
-					if len(keys) < 3 { continue }
+					if len(keys) < 3 {
+						continue
+					}
 					if keys[1] == "notes" {
 						switch keys[2] {
 						case "ext":
@@ -305,7 +307,6 @@ func CreateDefaultConfig() error {
 	_, err = writer.WriteString("# File paths\n")
 	_, err = writer.WriteString("#open.file.regex=((\\/|\\.\\/|~\\/|\\w:\\/\\w)\\S+)\n")
 
-
 	err = writer.Flush()
 	if err != nil {
 		return nil
@@ -334,8 +335,8 @@ type Report struct {
 	Columns     []string
 	Headers     []string
 	Sorter      *TodoSorter
-	Group		string
-	PrintNotes 	bool
+	Group       string
+	PrintNotes  bool
 }
 
 func (r *Report) Init(rc map[string]string) {

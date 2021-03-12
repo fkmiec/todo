@@ -2,6 +2,7 @@ package todolist
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"regexp"
 	"strconv"
@@ -780,6 +781,7 @@ func selectOpenTaskInput(openTasks []*OpenTask) *OpenTask {
 }
 
 func (a *App) openUri(uri string) {
+	//uri = a.EncodeUri(uri)
 	err := open.Start(uri)
 	if err != nil {
 		println("Error opening uri " + uri + ": " + err.Error())
@@ -788,6 +790,7 @@ func (a *App) openUri(uri string) {
 
 func (a *App) openUriWithCmd(uri string, cmd string) {
 	//err := open.StartWith(uri, cmd)
+	//uri = a.EncodeUri(uri)
 	err := open.RunWith(uri, cmd)
 	if err != nil {
 		println("Error opening uri " + uri + ": " + err.Error())
@@ -817,6 +820,33 @@ func (a *App) openNotes(uuid string, cmd string) {
 	} else {
 		a.openUri(notes)
 	}
+}
+
+//This only works for web urls
+//Still have a challenge with Windows files and paths with spaces
+//Not using in openUri function above.
+func (a *App) EncodeUri(uri string) string {
+	eUri, err := url.Parse(uri)
+	if err != nil {
+		fmt.Printf("Error parsing uri: '%s'. Error: %s\n", uri, err.Error())
+		os.Exit(1)
+	}
+
+	encoded := ""
+	scheme := eUri.Scheme
+	if scheme != "" {
+		encoded = scheme + "://"
+	}
+	host := eUri.Host
+	if host != "" {
+		encoded += host
+	}
+	encoded += eUri.EscapedPath()
+	if eUri.RawQuery != "" {
+		encoded += eUri.Query().Encode()
+	}
+	fmt.Println("URL: " + encoded)
+	return encoded
 }
 
 func (a *App) PrintHelp(c *CommandImpl) {
@@ -943,7 +973,11 @@ func (a *App) ExecAlias(c *CommandImpl) {
 		fmt.Println("Mods: ", origCmd.GetMods())
 		fmt.Println("Args: ", origCmd.GetArgs())
 	*/
-
+	cmd := origCmd.GetCmd()
+	if (cmd == "edit" || cmd == "archive" || cmd == "delete" || cmd == "complete") && len(origCmd.GetFilters()) == 0 {
+		fmt.Println("Destructive operations require a filter. None specified. Aborting.")
+		return
+	}
 	//Execute the original command. Only one command executed at a time, so no worries about over-writing origCmd mods, filters, etc.
 	origCmd.Exec(a)
 }
