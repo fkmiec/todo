@@ -193,7 +193,7 @@ func (f *FileStore) saveTodos(data []byte, filepath string) {
 }
 
 func (f *FileStore) AppendBacklog(filepath string, todos []*Todo) {
-	fd, err := os.OpenFile(filepath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777)
+	fd, err := os.OpenFile(filepath, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0777)
 	if err != nil {
 		println("Error opening file ", filepath, " : ", err.Error)
 		panic(err)
@@ -203,9 +203,11 @@ func (f *FileStore) AppendBacklog(filepath string, todos []*Todo) {
 	for _, todo := range todos {
 		data, _ := json.Marshal(todo)
 		if _, err = fd.Write(data); err != nil {
+			fmt.Println("Error appending to backlog json file: ", filepath, ". Error: ", err)
 			panic(err)
 		}
 		if _, err = fd.WriteString("\n"); err != nil {
+			fmt.Println("Error appending newline to backlog json file: ", filepath, ". Error: ", err)
 			panic(err)
 		}
 	}
