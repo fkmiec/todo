@@ -2,8 +2,12 @@ package todolist
 
 import (
 	"fmt"
+	"log"
+	"net/url"
 	"os"
+	"os/exec"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -654,7 +658,7 @@ func (a *App) Open(c *CommandImpl) {
 
 		openTasks := []*OpenTask{}
 
-		//var isBrowserTask = false
+		var isBrowserTask = false
 
 		var notes []string
 		for _, todo := range todos {
@@ -720,7 +724,7 @@ func (a *App) Open(c *CommandImpl) {
 							}
 							//If matched browser type, quit so not overwritten by less specific file type matching
 							if k == "browser" {
-								//isBrowserTask = true
+								isBrowserTask = true
 								break
 							}
 						} else {
@@ -740,20 +744,28 @@ func (a *App) Open(c *CommandImpl) {
 		var task *OpenTask
 		if len(openTasks) > 1 {
 			task = selectOpenTaskInput(openTasks)
+			if task == nil {
+				return
+			}
 			//Else just open it
 		} else if len(openTasks) > 0 {
 			task = openTasks[0]
 		}
+
+		//Below is a workaround because browser not opening on Windows 10 with openUri function.
+		if isBrowserTask {
+			task.Uri = a.EncodeUri(task.Uri)
+			if verbose {
+				println("Opening URL: " + task.Uri + " with preferred browser command")
+			}
+			a.openbrowser(task.Uri)
+		}
+
 		//Open the note
 		if task != nil {
 			if task.Uri == "notes" {
 				a.openNotes(task.Todo.Uuid, task.Cmd)
 			} else {
-				//if isBrowserTask {
-				//	task.Uri = a.EncodeUri(task.Uri)
-				//} else {
-				//task.Uri = a.UnspaceUri(task.Uri)
-				//}
 				if task.Cmd == "" {
 					a.openUri(task.Uri)
 				} else {
@@ -771,7 +783,7 @@ func selectOpenTaskInput(openTasks []*OpenTask) *OpenTask {
 	}
 	fmt.Print("Select note to open: ")
 	var i int
-	_, err := fmt.Scanf("%d", &i)
+	_, err := fmt.Scanf("%d\n", &i)
 	if err == nil {
 		return openTasks[i]
 	} else {
@@ -788,7 +800,6 @@ func selectOpenTaskInput(openTasks []*OpenTask) *OpenTask {
 }
 
 func (a *App) openUri(uri string) {
-	//uri = a.EncodeUri(uri)
 	err := open.Start(uri)
 	if err != nil {
 		println("Error opening uri " + uri + ": " + err.Error())
@@ -796,11 +807,29 @@ func (a *App) openUri(uri string) {
 }
 
 func (a *App) openUriWithCmd(uri string, cmd string) {
-	//err := open.StartWith(uri, cmd)
-	//uri = a.EncodeUri(uri)
-	err := open.RunWith(uri, cmd)
+	err := open.StartWith(uri, cmd)
 	if err != nil {
 		println("Error opening uri " + uri + ": " + err.Error())
+	}
+}
+
+//Workaround because skratchdot open-golang open package isn't working on windows for
+//opening the browser.
+func (a *App) openbrowser(url string) {
+	var err error
+
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -832,7 +861,6 @@ func (a *App) openNotes(uuid string, cmd string) {
 //This only works for web urls
 //Still have a challenge with Windows files and paths with spaces
 //Not using in openUri function above.
-/*
 func (a *App) EncodeUri(uri string) string {
 	eUri, err := url.Parse(uri)
 	if err != nil {
@@ -841,22 +869,32 @@ func (a *App) EncodeUri(uri string) string {
 	}
 
 	encoded := ""
+
 	scheme := eUri.Scheme
 	if scheme != "" {
 		encoded = scheme + "://"
 	}
+
 	host := eUri.Host
 	if host != "" {
 		encoded += host
 	}
-	encoded += eUri.EscapedPath()
+
+	paths := strings.Split(eUri.EscapedPath(), "/")
+	for i, p := range paths {
+		val, _ := url.QueryUnescape(p)
+		paths[i] = url.PathEscape(val)
+	}
+
+	encoded += strings.Join(paths, "/")
 	if eUri.RawQuery != "" {
 		encoded += eUri.Query().Encode()
 	}
-	fmt.Println("URL: " + encoded)
+
 	return encoded
 }
 
+/*
 func (a *App) UnspaceUri(uri string) string {
 
 	re, _ := regexp.Compile("\\s")
