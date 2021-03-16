@@ -877,10 +877,10 @@ func (a *App) EncodeUri(uri string) string {
 		val, _ := url.QueryUnescape(p)
 		paths[i] = url.PathEscape(val)
 	}
-
 	encoded += strings.Join(paths, "/")
+
 	if eUri.RawQuery != "" {
-		encoded += eUri.Query().Encode()
+		encoded += "?" + eUri.Query().Encode()
 	}
 
 	return encoded
